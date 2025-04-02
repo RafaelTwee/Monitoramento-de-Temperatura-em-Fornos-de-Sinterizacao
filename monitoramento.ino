@@ -97,7 +97,7 @@ void stopMeasurement() {
   delay(2000);
   lcd.clear();
 
-  sendToGoogleSheets(); // Envia os dados para a planilha
+  sendToGoogleSheets(); // Envia os dados para a planilha.
 }
 void sendToGoogleSheets() {
   if (WiFi.status() == WL_CONNECTED) {
