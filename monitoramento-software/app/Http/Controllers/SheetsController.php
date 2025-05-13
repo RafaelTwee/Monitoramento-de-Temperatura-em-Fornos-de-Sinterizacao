@@ -14,7 +14,7 @@ class SheetsController extends Controller
         return view('planilha', ['experimentos' => $experimentos]);
     }
     
-    public function getExperimentos() // Renomeie index() para getExperimentos()
+    public function getExperimentos()
     {
         $client = new Client();
         $client->setAuthConfig(base_path('google-credentials.json'));
@@ -29,18 +29,19 @@ class SheetsController extends Controller
 
         $experimentos = [];
         $experimentoAtual = [];
-        $contador = 1;
         $dataInicio = null;
+        $nomeExperimento = null;
         $processandoExperimento = false;
 
         foreach ($values as $row) {
-            if (!empty($row[0])) { // Encontrou uma data/hora
+            if (!empty($row[0])) { // Linha com data/hora
                 if (!$processandoExperimento) {
-                    // Primeira data - início do experimento
+                    // INÍCIO de um novo experimento
                     $dataInicio = $row[0];
+                    $nomeExperimento = $row[3] ?? ''; // Nome da coluna D
                     $processandoExperimento = true;
                     
-                    // Adiciona os dados da linha inicial
+                    // Adiciona primeira medição
                     if (isset($row[1])) {
                         $experimentoAtual[] = [
                             'tempo' => $row[1],
@@ -48,7 +49,8 @@ class SheetsController extends Controller
                         ];
                     }
                 } else {
-                    // Adiciona os dados desta linha ANTES de finalizar o experimento
+                    // FIM do experimento atual (nova data/hora)
+                    // Adiciona última medição antes de finalizar
                     if (isset($row[1])) {
                         $experimentoAtual[] = [
                             'tempo' => $row[1],
@@ -56,16 +58,15 @@ class SheetsController extends Controller
                         ];
                     }
                     
-                    // Marca o fim do experimento atual
-                    $experimentos[] = $this->criarExperimento($contador, $dataInicio, $row[0], $experimentoAtual);
-                    $contador++;
+                    // Registra o experimento completo
+                    $experimentos[] = $this->criarExperimento($dataInicio, $row[0], $nomeExperimento, $experimentoAtual);
                     
                     // Reseta para aguardar próximo experimento
                     $processandoExperimento = false;
                     $experimentoAtual = [];
                 }
             } elseif ($processandoExperimento) {
-                // Linha de dados normal (coluna A vazia) durante um experimento
+                // Continuação do experimento atual (linha sem data/hora)
                 if (isset($row[1])) {
                     $experimentoAtual[] = [
                         'tempo' => $row[1],
@@ -75,31 +76,48 @@ class SheetsController extends Controller
             }
         }
 
-        // Corrigindo o nome do método (de criarExperimento para criarExperimento)
+        // Adiciona o último experimento se estiver em andamento
         if ($processandoExperimento && !empty($experimentoAtual)) {
-            $experimentos[] = $this->criarExperimento($contador, $dataInicio, null, $experimentoAtual);
+            $experimentos[] = $this->criarExperimento($dataInicio, null, $nomeExperimento, $experimentoAtual);
         }
 
-        return $experimentos; // Retorna apenas o array de experimentos, sem a view
+        return $experimentos;
     }
 
-    private function criarExperimento($numero, $inicio, $fim, $dados)
+    private function criarExperimento($inicio, $fim, $nome, $dados)
     {
-        // Processa cada medição para garantir formato numérico correto
-        $dadosProcessados = [];
-        foreach ($dados as $medicao) {
-            $dadosProcessados[] = [
-                'tempo' => str_replace(',', '.', $medicao['tempo']),
-                'temperatura' => str_replace(',', '.', $medicao['temperatura'])
-            ];
-        }
-    
         return [
-            'id' => $numero - 1,
-            'nome' => "Experimento $numero - " . date('d/m/Y', strtotime($inicio)),
+            'id' => md5($inicio.$nome), // ID único
+            'nome' => $nome,
             'inicio' => $inicio,
             'fim' => $fim,
-            'dados' => $dadosProcessados
+            'dados' => array_map(function($medicao) {
+                return [
+                    'tempo' => str_replace(',', '.', $medicao['tempo']),
+                    'temperatura' => str_replace(',', '.', $medicao['temperatura'])
+                ];
+            }, $dados)
+        ];
+    }
+
+
+    private function calcularMetricas($dados)
+    {
+        $temperaturas = array_column($dados, 'temperatura');
+        $temperaturas = array_filter($temperaturas, function($temp) {
+            return is_numeric($temp);
+        });
+        
+        if (empty($temperaturas)) {
+            return [
+                'max' => null,
+                'avg' => null
+            ];
+        }
+        
+        return [
+            'max' => max($temperaturas),
+            'avg' => array_sum($temperaturas) / count($temperaturas)
         ];
     }
 }

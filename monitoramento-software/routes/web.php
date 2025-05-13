@@ -6,7 +6,8 @@ use App\Http\Controllers\GraficoController;
 
 // Página principal
 Route::get('/', function () {
-    return view('welcome');
+    $experimentos = app(SheetsController::class)->getExperimentos();
+    return view('welcome', ['experimentos' => $experimentos]);
 });
 
 // Rotas da planilha
