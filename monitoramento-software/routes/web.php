@@ -8,7 +8,7 @@ use App\Http\Controllers\GraficoController;
 Route::get('/', function () {
     $experimentos = app(SheetsController::class)->getExperimentos();
     return view('welcome', ['experimentos' => $experimentos]);
-});
+})->name('welcome');
 
 // Rotas da planilha
 Route::controller(SheetsController::class)->group(function () {
