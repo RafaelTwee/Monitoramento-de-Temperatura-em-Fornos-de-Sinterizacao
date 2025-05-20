@@ -79,48 +79,48 @@
     </div>
 
     <div class="container">
-            <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
-                <!-- Cabeçalho do Experimento -->
-                <div class="mb-6">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex space-x-4 mt-2 text-sm text-gray-800">
-                                <span><i class="far fa-clock mr-1"></i> <strong>Início:</strong> {{ $experimento['inicio'] }}</span>
-                                <span><i class="far fa-clock mr-1"></i> <strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}</span>
-                                <span><i class="fas fa-ruler-combined mr-1"></i> <strong>Medições:</strong> {{ count($experimento['dados']) }}</span>
-                            </div>
+        <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
+            <!-- Cabeçalho do Experimento -->
+            <div class="mb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex space-x-4 mt-2 text-sm text-gray-800">
+                            <span><i class="far fa-clock mr-1"></i> <strong>Início:</strong> {{ $experimento['inicio'] }}</span>
+                            <span><i class="far fa-clock mr-1"></i> <strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}</span>
+                            <span><i class="fas fa-ruler-combined mr-1"></i> <strong>Medições:</strong> {{ count($experimento['dados']) }}</span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Tabela de Dados -->
-                <div class="table-container border border-gray-200 rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                                    Tempo Decorrido
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                                    Temperatura (°C)
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-300">
-                            @foreach ($experimento['dados'] as $linha)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                    {{ $linha['tempo'] ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
-                                    {{ $linha['temperatura'] ?? '-' }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
             </div>
+
+            <!-- Tabela de Dados -->
+            <div class="table-container border border-gray-200 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
+                                Tempo Decorrido
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
+                                Temperatura (°C)
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-300">
+                        @foreach ($experimento['dados'] as $linha)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                {{ $linha['tempo'] ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
+                                {{ $linha['temperatura'] ?? '-' }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 
