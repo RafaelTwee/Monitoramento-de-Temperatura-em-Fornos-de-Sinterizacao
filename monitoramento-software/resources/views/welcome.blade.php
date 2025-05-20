@@ -121,7 +121,7 @@
                             </td>
                             <td>{{ $avgTemp }}</td>
                             <td class="text-right">
-                                <a href="{{ route('experimentos.show', $experimento['id']) }}" 
+                                <a href="{{ route('experimentos.grafico', $experimento['id']) }}" 
                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                                     <i class="fas fa-chart-line mr-1"></i> Gráfico
                                 </a>

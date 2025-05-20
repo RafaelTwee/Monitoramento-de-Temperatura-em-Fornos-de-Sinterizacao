@@ -18,5 +18,5 @@ Route::controller(SheetsController::class)->group(function () {
 // Rotas de gráficos
 Route::controller(GraficoController::class)->group(function () {
     Route::get('/experimentos', 'index')->name('experimentos.index');
-    Route::get('/experimentos/{id}', 'show')->name('experimentos.show');
+    Route::get('/experimentos/{id}', 'show')->name('experimentos.grafico');
 });

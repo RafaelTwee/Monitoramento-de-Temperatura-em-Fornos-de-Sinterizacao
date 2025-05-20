@@ -50,7 +50,7 @@
                                         <span><i class="fas fa-ruler-combined mr-1"></i> <strong>Medições:</strong> {{ count($experimento['dados']) }}</span>
                                     </div>
                                 </div>
-                                <a href="{{ route('experimentos.show', $experimento['id']) }}" 
+                                <a href="{{ route('experimentos.grafico', $experimento['id']) }}" 
                                    class="flex items-center px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm">
                                     <i class="fas fa-chart-line mr-1"></i> Ver Gráfico
                                 </a>

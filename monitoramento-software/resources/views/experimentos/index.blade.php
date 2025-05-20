@@ -42,7 +42,7 @@
                 <p><strong>Início:</strong> {{ $experimento['inicio'] }}</p>
                 <p><strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}</p>
                 <p><strong>Medições:</strong> {{ count($experimento['dados']) }}</p>
-                <a href="{{ route('experimentos.show', $experimento['id']) }}" class="btn-ver">Ver Gráfico</a>
+                <a href="{{ route('experimentos.grafico', $experimento['id']) }}" class="btn-ver">Ver Gráfico</a>
             </div>
         @endforeach
     @else

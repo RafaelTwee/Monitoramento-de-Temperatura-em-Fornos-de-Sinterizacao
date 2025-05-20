@@ -45,7 +45,7 @@ class GraficoController extends Controller
         // Debug: Mostra os dados processados para o gráfico
         // dd($dadosGrafico);
     
-        return view('experimentos.show', [
+        return view('experimentos.grafico', [
             'experimento' => $experimentoEncontrado,
             'dadosGrafico' => $dadosGrafico
         ]);
