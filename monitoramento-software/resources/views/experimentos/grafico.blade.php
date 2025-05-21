@@ -16,6 +16,8 @@
         .container { 
             max-width: 900px;
             margin: 0 auto;
+            
+            
         }
 
         .experimento-card {
@@ -25,10 +27,27 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        tbody {
+            display: block;
+            overflow-y: auto;
+            max-height: 400px; /* Ajuste conforme necessário */
+        }
+
+        thead, tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
         .table-container {
             width: 100%;
-            height: 500px;
+            max-height: 400px; /* Ajuste conforme necessário */
             margin-top: 20px;
+            overflow-y: auto
         }
         table thead th {
             position: sticky;
@@ -78,7 +97,7 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container mb-16" >
         <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
             <!-- Cabeçalho do Experimento -->
             <div class="mb-6">
