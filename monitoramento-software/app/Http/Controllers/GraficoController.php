@@ -53,7 +53,6 @@ class GraficoController extends Controller
 
     private function prepararDadosGrafico($dados)
     {
-    // Verifica se existem dados
         if (empty($dados)) {
             return [
                 'labels' => [],
@@ -62,9 +61,28 @@ class GraficoController extends Controller
         }
 
         // Extrai os valores diretamente
+        $labels = array_column($dados, 'tempo');
+        $temperaturas = array_column($dados, 'temperatura');
+
+        // Calcula diferenças entre medições consecutivas
+        $diferencasTempo = [];
+        $diferencasTemperatura = [];
+        
+        foreach ($labels as $i => $tempo) {
+            if ($i === 0) {
+                $diferencasTempo[] = 0;
+                $diferencasTemperatura[] = 0;
+            } else {
+                $diferencasTempo[] = $labels[$i] - $labels[$i-1];
+                $diferencasTemperatura[] = $temperaturas[$i] - $temperaturas[$i-1];
+            }
+        }
+
         return [
-            'labels' => array_column($dados, 'tempo'),
-            'temperaturas' => array_column($dados, 'temperatura')
+            'labels' => $labels,
+            'temperaturas' => $temperaturas,
+            'diferencas_tempo' => $diferencasTempo,
+            'diferencas_temperatura' => $diferencasTemperatura
         ];
     }
 }

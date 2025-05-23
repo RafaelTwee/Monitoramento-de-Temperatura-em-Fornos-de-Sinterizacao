@@ -6,6 +6,7 @@
     <title>Gráfico do Experimento</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -16,8 +17,38 @@
         .container { 
             max-width: 900px;
             margin: 0 auto;
-            
-            
+        }
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .reset-zoom {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .reset-zoom:hover {
+            opacity: 1;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .reset-zoom {
+            margin-top: 0.5rem;
         }
 
         .experimento-card {
@@ -31,13 +62,11 @@
             width: 100%;
             border-collapse: collapse;
         }
-
         tbody {
             display: block;
             overflow-y: auto;
-            max-height: 400px; /* Ajuste conforme necessário */
+            max-height: 400px;
         }
-
         thead, tbody tr {
             display: table;
             width: 100%;
@@ -45,16 +74,15 @@
         }
         .table-container {
             width: 100%;
-            max-height: 400px; /* Ajuste conforme necessário */
+            max-height: 400px;
             margin-top: 20px;
-            overflow-y: auto
+            overflow-y: auto;
         }
         table thead th {
             position: sticky;
             top: 0;
             z-index: 10;
         }
-        
         .btn-voltar { 
             display: inline-block;
             padding: 8px 15px;
@@ -70,11 +98,10 @@
         }
         .chart-container {
             width: 100%;
-            height: 500px;
+            height: 400px;
             margin-top: 20px;
         }
         .text-danger { color: red; }
-
     </style>
 </head>
 <body>
@@ -90,14 +117,23 @@
         <h2 class="text-xl font-semibold text-gray-800">{{ $experimento['nome'] }}</h2>
     </div>
     
-    <!-- Restante do seu código permanece igual -->
+    <!-- Container para os dois gráficos -->
     <div class="container">
-        <div class="chart-container">
-            <canvas id="temperaturaChart"></canvas>
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="temperaturaChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="diferencasChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="container mb-16" >
+    <div class="container mb-16">
         <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
             <!-- Cabeçalho do Experimento -->
             <div class="mb-6">
@@ -142,60 +178,207 @@
         </div>
     </div>
 
-
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('temperaturaChart');
-        
-        // Verifica se existem dados
-        const labels = @json($dadosGrafico['labels']);
-        const data = @json($dadosGrafico['temperaturas']);
-        
-        if (!labels || !data || labels.length === 0 || data.length === 0) {
-            console.error('Dados do gráfico vazios:', {labels, data});
-            ctx.innerHTML = '<p class="text-danger">Nenhum dado disponível para exibição</p>';
-            return;
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            let temperaturaChart;
+            let diferencasChart;
 
-        // Converte strings para números (caso ainda não estejam)
-        const numericData = data.map(Number);
-        const numericLabels = labels.map(Number);
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: numericLabels,
-                datasets: [{
-                    label: 'Temperatura (°C)',
-                    data: numericData,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Temperatura (°C)'
-                        }
+            // Registrar o plugin de zoom
+            Chart.register(ChartZoom);
+        
+            // Configurações comuns de zoom
+            const zoomOptions = {
+                pan: {
+                    enabled: true,
+                    mode: 'xy',
+                    modifierKey: 'shift'
+                },
+                zoom: {
+                    wheel: {
+                        enabled: true,
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Tempo Decorrido'
-                        }
+                    pinch: {
+                        enabled: true
+                    },
+                    mode: 'xy',
+                    onZoom: ({chart}) => {
+                        // Guarda o estado original do zoom
+                        chart.originalScaleLimits = {
+                            x: {min: chart.scales.x.min, max: chart.scales.x.max},
+                            y: {min: chart.scales.y.min, max: chart.scales.y.max}
+                        };
                     }
                 }
+            };
+
+            // Gráfico de temperatura original
+            const ctxTemperatura = document.getElementById('temperaturaChart');
+            
+            const labels = @json($dadosGrafico['labels']);
+            const data = @json($dadosGrafico['temperaturas']);
+            
+            if (!labels || !data || labels.length === 0 || data.length === 0) {
+                console.error('Dados do gráfico vazios:', {labels, data});
+                ctxTemperatura.innerHTML = '<p class="text-danger">Nenhum dado disponível para exibição</p>';
+                return;
             }
+
+            const numericData = data.map(Number);
+            const numericLabels = labels.map(Number);
+
+            temperaturaChart = new Chart(ctxTemperatura, {
+
+                type: 'line',
+                data: {
+                    labels: numericLabels,
+                    datasets: [{
+                        label: 'Temperatura (°C)',
+                        data: numericData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Temperatura (°C)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tempo Decorrido'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: zoomOptions,
+                        legend: {
+                            onClick: (e, legendItem, legend) => {
+                                // Desativa o comportamento padrão de esconder o dataset
+                                return;
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartZoom]
+            });
+
+            // Gráfico de diferenças de temperatura (ΔT) vs tempo
+            const ctxDiferencas = document.getElementById('diferencasChart');
+            
+            // Calcula as diferenças de temperatura entre medições consecutivas
+            const deltaTemperatura = [];
+            const labelsDelta = [];
+            
+            for (let i = 0; i < numericLabels.length; i++) {
+                if (i === 0) {
+                    deltaTemperatura.push(0);
+                } else {
+                    deltaTemperatura.push(numericData[i] - numericData[i-1]);
+                }
+                labelsDelta.push(numericLabels[i]);
+            }
+
+            // Cria o gráfico de diferenças
+            diferencasChart = new Chart(ctxDiferencas, {
+
+                type: 'line',
+                data: {
+                    labels: labelsDelta,
+                    datasets: [{
+                        label: 'Variação de Temperatura (ΔT)',
+                        data: deltaTemperatura,
+                        backgroundColor: function(context) {
+                            return context.raw >= 0 
+                                ? 'rgba(255, 99, 132, 0.7)' 
+                                : 'rgba(54, 162, 235, 0.7)';
+                        },
+                        borderColor: function(context) {
+                            return context.raw >= 0 
+                                ? 'rgba(255, 99, 132, 1)' 
+                                : 'rgba(54, 162, 235, 1)';
+                        },
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Variação de Temperatura (ΔT °C)'
+                            },
+                            beginAtZero: false
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tempo Decorrido'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: zoomOptions,
+                        legend: {
+                            onClick: (e, legendItem, legend) => {
+                                return;
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `ΔT: ${context.parsed.y.toFixed(2)}°C`;
+                                },
+                                afterLabel: function(context) {
+                                    const i = context.dataIndex;
+                                    if (i > 0) {
+                                        return `Temperatura atual: ${numericData[i].toFixed(2)}°C\nTemperatura anterior: ${numericData[i-1].toFixed(2)}°C`;
+                                    }
+                                    return `Temperatura: ${numericData[i].toFixed(2)}°C`;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartZoom]
+            });
+
+            // Adiciona botão de reset para ambos os gráficos
+            function addResetButtons() {
+                const resetZoom = (chart) => {
+                    if (chart) {
+                        chart.resetZoom(); // método do plugin chartjs-plugin-zoom
+                    }
+                };
+
+                const container1 = document.querySelector('#temperaturaChart').closest('.chart-wrapper');
+                const btn1 = document.createElement('button');
+                btn1.className = 'reset-zoom bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs';
+                btn1.textContent = 'Resetar Zoom';
+                btn1.onclick = () => resetZoom(temperaturaChart);
+                container1.appendChild(btn1);
+
+                const container2 = document.querySelector('#diferencasChart').closest('.chart-wrapper');
+                const btn2 = document.createElement('button');
+                btn2.className = 'reset-zoom bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs';
+                btn2.textContent = 'Resetar Zoom';
+                btn2.onclick = () => resetZoom(diferencasChart);
+                container2.appendChild(btn2);
+            }
+
+            addResetButtons();
         });
-    });
     </script>
 </body>
 </html>
