@@ -77,19 +77,16 @@
             <h1 class="text-3xl font-bold text-gray-800">
                 <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
-            <div>
-                <button id="limparFiltros" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition mr-4">
-                    <i class="fas fa-eraser mr-2"></i> Limpar Filtros
-                </button>
-                <a href="/planilha" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-table mr-2"></i> Ver Planilha Completa
-                </a>
-            </div>
         </div>
 
         @if (!empty($experimentos))
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <table id="tabelaExperimentos" class="w-full">
+                <div class="flex justify-end p-4">
+                    <button id="limparFiltros" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition mr-0">
+                        <i class="fas fa-eraser mr-2"></i> Limpar Filtros
+                    </button>
+                </div>
+                <table id="tabelaExperimentos" class="w-full  text-sm text-gray-500">
                     <thead>
                         <tr>
                             <th>Experimento</th>
@@ -149,7 +146,10 @@
                     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
                 },
                 dom: `
-                    <"flex justify-between items-center mb-4"<"flex"lf>B>
+                    <"flex justify-between items-center  ml-4"
+                        <"flex-1"l>
+                        <"flex-1 text-right mr-4 "f>
+                    >
                     rt
                     <"flex justify-between items-center mt-4"ip>
                 `,
