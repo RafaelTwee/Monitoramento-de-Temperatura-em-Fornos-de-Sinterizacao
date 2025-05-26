@@ -272,31 +272,32 @@
                 plugins: [ChartZoom]
             });
 
-            // Gráfico de diferenças de temperatura (ΔT) vs tempo
+            // Gráfico de derivadas (dT/dt) vs tempo
             const ctxDiferencas = document.getElementById('diferencasChart');
-            
-            // Calcula as diferenças de temperatura entre medições consecutivas
-            const deltaTemperatura = [];
-            const labelsDelta = [];
-            
+                        
+            // Calcula as derivadas (ΔT/Δt) entre medições consecutivas
+            const derivadas = [];
+            const labelsDerivada = [];
+
             for (let i = 0; i < numericLabels.length; i++) {
                 if (i === 0) {
-                    deltaTemperatura.push(0);
+                    derivadas.push(0); // Primeiro ponto tem derivada zero
                 } else {
-                    deltaTemperatura.push(numericData[i] - numericData[i-1]);
+                    const deltaT = numericData[i] - numericData[i-1];
+                    const deltaTime = numericLabels[i] - numericLabels[i-1];
+                    derivadas.push(deltaTime !== 0 ? deltaT / deltaTime : 0);
                 }
-                labelsDelta.push(numericLabels[i]);
+                labelsDerivada.push(numericLabels[i]);
             }
 
-            // Cria o gráfico de diferenças
+            // Cria o gráfico de derivadas
             diferencasChart = new Chart(ctxDiferencas, {
-
                 type: 'line',
                 data: {
-                    labels: labelsDelta,
+                    labels: labelsDerivada,
                     datasets: [{
-                        label: 'Variação de Temperatura (ΔT)',
-                        data: deltaTemperatura,
+                        label: 'Taxa de Variação (dT/dt)',
+                        data: derivadas,
                         backgroundColor: function(context) {
                             return context.raw >= 0 
                                 ? 'rgba(255, 99, 132, 0.7)' 
@@ -307,7 +308,9 @@
                                 ? 'rgba(255, 99, 132, 1)' 
                                 : 'rgba(54, 162, 235, 1)';
                         },
-                        borderWidth: 1
+                        borderWidth: 1,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
@@ -317,14 +320,14 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Variação de Temperatura (ΔT °C)'
+                                text: 'Taxa de Variação (°C/s)'
                             },
                             beginAtZero: false
                         },
                         x: {
                             title: {
                                 display: true,
-                                text: 'Tempo Decorrido'
+                                text: 'Tempo Decorrido (s)'
                             }
                         }
                     },
@@ -338,14 +341,20 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return `ΔT: ${context.parsed.y.toFixed(2)}°C`;
+                                    return `Taxa: ${context.parsed.y.toFixed(4)}°C/s`;
                                 },
                                 afterLabel: function(context) {
                                     const i = context.dataIndex;
-                                    if (i > 0) {
-                                        return `Temperatura atual: ${numericData[i].toFixed(2)}°C\nTemperatura anterior: ${numericData[i-1].toFixed(2)}°C`;
+                                    const currentTemp = numericData[i].toFixed(2);
+                                    const prevTemp = i > 0 ? numericData[i-1].toFixed(2) : null;
+                                    
+                                    let tooltip = `Temperatura atual: ${currentTemp}°C`;
+                                    if (prevTemp !== null) {
+                                        tooltip += `\nTemperatura anterior: ${prevTemp}°C`;
+                                        tooltip += `\nΔT: ${(numericData[i] - numericData[i-1]).toFixed(2)}°C`;
+                                        tooltip += `\nΔt: ${(numericLabels[i] - numericLabels[i-1]).toFixed(2)}s`;
                                     }
-                                    return `Temperatura: ${numericData[i].toFixed(2)}°C`;
+                                    return tooltip;
                                 }
                             }
                         }

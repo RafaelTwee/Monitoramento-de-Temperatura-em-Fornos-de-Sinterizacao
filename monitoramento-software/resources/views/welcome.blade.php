@@ -6,6 +6,8 @@
     <title>Monitoramento de Experimentos</title>
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.5/sorting/datetime-moment.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         #tabelaExperimentos {
@@ -105,11 +107,15 @@
                             $temperaturas = array_filter($temperaturas, 'is_numeric');
                             $maxTemp = count($temperaturas) > 0 ? max($temperaturas) : '-';
                             $avgTemp = count($temperaturas) > 0 ? number_format(array_sum($temperaturas)/count($temperaturas), 2) : '-';
+                            
+                            // Converter datas para formato ISO para ordenação
+                            $inicioISO = $experimento['inicio'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['inicio']))) : '';
+                            $fimISO = $experimento['fim'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['fim']))) : '';
                         @endphp
                         <tr>
                             <td>{{ $experimento['nome'] }}</td>
-                            <td data-order="{{ strtotime($experimento['inicio']) }}">{{ $experimento['inicio'] }}</td>
-                            <td data-order="{{ $experimento['fim'] ? strtotime($experimento['fim']) : 0 }}">
+                            <td data-order="{{ $inicioISO }}">{{ $experimento['inicio'] }}</td>
+                            <td data-order="{{ $fimISO }}">
                                 {{ $experimento['fim'] ?? 'Em andamento' }}
                             </td>
                             <td>{{ count($experimento['dados']) }}</td>
@@ -139,38 +145,77 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.5/sorting/datetime-moment.js"></script>
+
     <script>
         $(document).ready(function() {
+            // Registrar o formato de data para ordenação
+            $.fn.dataTable.moment('YYYY-MM-DD HH:mm:ss');
+            
             var table = $('#tabelaExperimentos').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
                 },
                 dom: `
-                    <"flex justify-between items-center  ml-4"
+                    <"flex justify-between items-center mb-4 mx-4"
                         <"flex-1"l>
-                        <"flex-1 text-right mr-4 "f>
+                        <"flex-1 text-right"f>
                     >
                     rt
-                    <"flex justify-between items-center mt-4"ip>
+                    <"flex justify-between items-center mt-4 mx-4"ip>
                 `,
-                buttons: [],
                 columnDefs: [
-                    { orderable: false, targets: 6 },
-                    { className: "dt-left", targets: [0,1,2,3,4,5] },
-                    { className: "dt-right", targets: 6 }
+                    { 
+                        orderable: false, 
+                        targets: 6 
+                    },
+                    { 
+                        className: "dt-left", 
+                        targets: [0,1,2,3,4,5] 
+                    },
+                    { 
+                        className: "dt-right", 
+                        targets: 6 
+                    },
+                    { 
+                        type: 'moment-date',
+                        targets: [1, 2],
+                        render: function(data, type, row) {
+                            // Para exibição, mostra o valor original
+                            if (type === 'display') {
+                                return data.includes('_') ? 
+                                    data.replace('_', ' ') : 
+                                    (data || 'Em andamento');
+                            }
+                            // Para ordenação, usa o valor de data-order (ISO)
+                            return data;
+                        }
+                    }
                 ],
                 initComplete: function() {
+                    // Adicionar filtros individuais para cada coluna (exceto ações)
                     this.api().columns().every(function(index) {
-                        if (index !== 6) {
+                        if (index !== 6) { // Ignorar coluna de ações
                             var column = this;
                             var header = $(column.header());
-                            header.append('<div class="mt-2"><input type="text" class="w-full px-2 py-1 border rounded" placeholder="Filtrar..." data-column="' + index + '"/></div>');
                             
-                            $('input', header).on('keyup change', function() {
-                                if (column.search() !== this.value) {
-                                    column.search(this.value).draw();
-                                }
-                            });
+                            // Remove qualquer input existente antes de adicionar novo
+                            $('input', header).remove();
+                            
+                            // Adiciona o input de filtro
+                            var input = $('<input type="text" class="w-full px-2 py-1 border rounded mt-2" placeholder="Filtrar..." />')
+                                .appendTo(header)
+                                .on('keyup change', function() {
+                                    if (column.search() !== this.value) {
+                                        column.search(this.value).draw();
+                                    }
+                                });
+                            
+                            // Se for coluna de data, adiciona classe específica
+                            if (index === 1 || index === 2) {
+                                input.addClass('filter-date');
+                            }
                         }
                     });
                 }
@@ -181,6 +226,7 @@
                 $('input[type="text"]').val('');
             });
 
+            // Ordena pela coluna de Início (descendente) por padrão
             table.order([1, 'desc']).draw();
         });
     </script>

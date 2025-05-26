@@ -84,10 +84,10 @@ class SheetsController extends Controller
         return $experimentos;
     }
 
-    private function criarExperimento($inicio, $fim, $nome, $dados)
+   private function criarExperimento($inicio, $fim, $nome, $dados)
     {
         return [
-            'id' => md5($inicio.$nome), // ID único
+            'id' => md5($inicio.$nome),
             'nome' => $nome,
             'inicio' => $inicio,
             'fim' => $fim,
@@ -98,6 +98,28 @@ class SheetsController extends Controller
                 ];
             }, $dados)
         ];
+    }
+
+    private function formatarDataParaISO($data)
+    {
+        if (empty($data)) return null;
+        
+        // Converter de "DD/MM/YYYY_HH:MM:SS" para "YYYY-MM-DD HH:MM:SS"
+        $partes = explode('_', $data);
+        if (count($partes) !== 2) return $data;
+        
+        $dataParte = $partes[0];
+        $horaParte = $partes[1];
+        
+        $dataPartes = explode('/', $dataParte);
+        if (count($dataPartes) !== 3) return $data;
+        
+        return sprintf('%s-%s-%s %s', 
+            $dataPartes[2], // Ano
+            $dataPartes[1], // Mês
+            $dataPartes[0], // Dia
+            $horaParte     // Hora
+        );
     }
 
 
