@@ -10,6 +10,9 @@ Route::get('/', function () {
     return view('welcome', ['experimentos' => $experimentos]);
 })->name('welcome');
 
+// Rota para excluir experimento
+Route::delete('/experimentos/{id}', [SheetsController::class, 'destroy'])->name('experimentos.destroy');
+
 // Rotas da planilha
 Route::controller(SheetsController::class)->group(function () {
     Route::get('/planilha', 'index');

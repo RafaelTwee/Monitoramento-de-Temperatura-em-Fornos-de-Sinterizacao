@@ -123,12 +123,26 @@
                                 {{ $maxTemp }}
                             </td>
                             <td>{{ $avgTemp }}</td>
-                            <td class="text-right">
-                                <a href="{{ route('experimentos.grafico', $experimento['id']) }}" 
-                                   class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                            <td class="text-right flex justify-end space-x-2">
+                                <!-- Botão de Gráfico -->
+                                <a href="{{ route('experimentos.grafico', $experimento['id']) }}"
+                                class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                                     <i class="fas fa-chart-line mr-1"></i> Gráfico
                                 </a>
+
+                                <!-- Botão de Excluir -->
+                                <form action="{{ route('experimentos.destroy', $experimento['id']) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir este experimento?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                                        <i class="fas fa-trash-alt mr-1"></i> Excluir
+                                    </button>
+                                </form>
                             </td>
+
                         </tr>
                         @endforeach
                     </tbody>

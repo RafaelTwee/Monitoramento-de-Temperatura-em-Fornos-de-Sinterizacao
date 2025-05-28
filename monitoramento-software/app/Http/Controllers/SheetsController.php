@@ -20,69 +20,86 @@ class SheetsController extends Controller
         $client->setAuthConfig(base_path('google-credentials.json'));
         $client->addScope(Sheets::SPREADSHEETS_READONLY);
 
-        $service = new Sheets($client);
+        $service       = new Sheets($client);
         $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
-        $range = 'Página1!A2:D';
+        $range         = 'Página1!A2:D';
+        $response      = $service->spreadsheets_values->get($spreadsheetId, $range);
+        $values        = $response->getValues();
 
-        $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-        $values = $response->getValues();
+        $experimentos        = [];
+        $experimentoAtual    = [];
+        $processando         = false;
+        $dataInicio          = null;
+        $nomeExperimento     = null;
+        $headerOffset        = 2;                   // dados começam na linha 2 da sheet
+        $startRow            = null;                // será definido ao iniciar experimento
 
-        $experimentos = [];
-        $experimentoAtual = [];
-        $dataInicio = null;
-        $nomeExperimento = null;
-        $processandoExperimento = false;
+        foreach ($values as $idx => $row) {
+            $rowNumber = $headerOffset + $idx;     // linha real na planilha
 
-        foreach ($values as $row) {
-            if (!empty($row[0])) { // Linha com data/hora
-                if (!$processandoExperimento) {
-                    // INÍCIO de um novo experimento
-                    $dataInicio = $row[0];
-                    $nomeExperimento = $row[3] ?? ''; // Nome da coluna D
-                    $processandoExperimento = true;
-                    
-                    // Adiciona primeira medição
+            if (! empty($row[0])) {
+                // encontrou data/hora → início ou término de experimento
+                if (! $processando) {
+                    // INÍCIO
+                    $processando      = true;
+                    $startRow         = $rowNumber;
+                    $dataInicio       = $row[0];
+                    $nomeExperimento  = $row[3] ?? '';
+
+                    // registra primeira medição
                     if (isset($row[1])) {
                         $experimentoAtual[] = [
-                            'tempo' => $row[1],
-                            'temperatura' => $row[2] ?? null
+                            'tempo'        => $row[1],
+                            'temperatura'  => $row[2] ?? null
                         ];
                     }
                 } else {
-                    // FIM do experimento atual (nova data/hora)
-                    // Adiciona última medição antes de finalizar
+                    // FIM do experimento atual
+                    // adiciona última medição
                     if (isset($row[1])) {
                         $experimentoAtual[] = [
-                            'tempo' => $row[1],
+                            'tempo'       => $row[1],
                             'temperatura' => $row[2] ?? null
                         ];
                     }
-                    
-                    // Registra o experimento completo
-                    $experimentos[] = $this->criarExperimento($dataInicio, $row[0], $nomeExperimento, $experimentoAtual);
-                    
-                    // Reseta para aguardar próximo experimento
-                    $processandoExperimento = false;
+
+                    $endRow = $rowNumber;
+
+                    // monta o array completo e anexa start/end
+                    $exp = $this->criarExperimento($dataInicio, $row[0], $nomeExperimento, $experimentoAtual);
+                    $exp['startRow'] = $startRow;
+                    $exp['endRow']   = $endRow;
+                    $experimentos[]  = $exp;
+
+                    // reseta para o próximo
+                    $processando      = false;
                     $experimentoAtual = [];
                 }
-            } elseif ($processandoExperimento) {
-                // Continuação do experimento atual (linha sem data/hora)
+            } elseif ($processando) {
+                // linhas intermediárias do experimento
                 if (isset($row[1])) {
                     $experimentoAtual[] = [
-                        'tempo' => $row[1],
+                        'tempo'       => $row[1],
                         'temperatura' => $row[2] ?? null
                     ];
                 }
             }
         }
 
-        // Adiciona o último experimento se estiver em andamento
-        if ($processandoExperimento && !empty($experimentoAtual)) {
-            $experimentos[] = $this->criarExperimento($dataInicio, null, $nomeExperimento, $experimentoAtual);
+        // se terminou lendo e ainda havia um experimento em aberto:
+        if ($processando && ! empty($experimentoAtual)) {
+            $lastIdx = count($values) - 1;
+            $endRow  = $headerOffset + $lastIdx;
+
+            $exp = $this->criarExperimento($dataInicio, null, $nomeExperimento, $experimentoAtual);
+            $exp['startRow'] = $startRow;
+            $exp['endRow']   = $endRow;
+            $experimentos[]  = $exp;
         }
 
         return $experimentos;
     }
+
 
    private function criarExperimento($inicio, $fim, $nome, $dados)
     {
@@ -99,6 +116,60 @@ class SheetsController extends Controller
             }, $dados)
         ];
     }
+
+    
+    public function destroy($id)
+    {
+        // 1) Recupera e localiza o experimento
+        $experimentos = $this->getExperimentos();
+        $toDelete = collect($experimentos)->first(fn($exp) => $exp['id'] === $id);
+
+        if (! $toDelete) {
+            return redirect()->route('welcome')
+                            ->with('error', 'Experimento não encontrado.');
+        }
+
+        // 2) Converte linhas 1-based em índices 0-based para o deleteDimension
+        $startRow = $toDelete['startRow'];      // ex: 5
+        $endRow   = $toDelete['endRow'] ?? $startRow; // ex: 10
+        $startIdx = $startRow - 1;              // ex: 4 (inclusivo)
+        $endIdx   = $endRow;                    // ex: 10 (exclusivo)
+
+        // 3) Inicializa cliente e serviço
+        $client = new \Google\Client();
+        $client->setAuthConfig(base_path('google-credentials.json'));
+        $client->addScope(\Google\Service\Sheets::SPREADSHEETS);
+        $service = new \Google\Service\Sheets($client);
+
+        // 4) ID da sua planilha e descoberta do sheetId da aba "Página1"
+        $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
+        $meta = $service->spreadsheets->get($spreadsheetId);
+        $sheet = collect($meta->getSheets())
+                ->first(fn($s) => $s->getProperties()->getTitle() === 'Página1');
+        $sheetId = $sheet->getProperties()->getSheetId();
+
+        // 5) Monta e dispara o BatchUpdate para deletar as linhas
+        $batchRequest = new \Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
+            'requests' => [
+                [
+                    'deleteDimension' => [
+                        'range' => [
+                            'sheetId'    => $sheetId,
+                            'dimension'  => 'ROWS',
+                            'startIndex' => $startIdx,
+                            'endIndex'   => $endIdx,
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+        $service->spreadsheets->batchUpdate($spreadsheetId, $batchRequest);
+
+        return redirect()->route('welcome')
+                        ->with('success', 'Linhas do experimento excluídas com sucesso.');
+    }
+
+
 
     private function formatarDataParaISO($data)
     {
