@@ -12,10 +12,14 @@ class GoogleSheetService
     public function __construct()
     {
         $client = new Google_Client();
+
+        $googleCredentials = env('GOOGLE_CREDENTIALS_JSON');
+        $decodedCredentials = json_decode($googleCredentials, true);
+        
         $client->setApplicationName('Google Sheets');
         $client->setScopes([Google_Service_Sheets::SPREADSHEETS]);
         $client->setAccessType('offline');
-        $client->setAuthConfig(env('GOOGLE_SHEETS_JSON'));
+        $client->setAuthConfig($decodedCredentials);
         $this->sheetsService = new Google_Service_Sheets($client);
     }
 
