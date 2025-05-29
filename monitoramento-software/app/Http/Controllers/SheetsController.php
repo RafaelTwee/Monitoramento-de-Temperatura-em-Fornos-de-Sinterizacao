@@ -17,7 +17,10 @@ class SheetsController extends Controller
     public function getExperimentos()
     {
         $client = new Client();
-        $client->setAuthConfig(base_path('google-credentials.json'));
+        $googleCredentials = env('GOOGLE_CREDENTIALS_JSON');
+        $decodedCredentials = json_decode($googleCredentials, true);
+        
+        $client->setAuthConfig($decodedCredentials);
         $client->addScope(Sheets::SPREADSHEETS_READONLY);
 
         $service       = new Sheets($client);
