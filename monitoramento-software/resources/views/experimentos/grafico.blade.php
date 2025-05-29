@@ -65,7 +65,7 @@
         tbody {
             display: block;
             overflow-y: auto;
-            max-height: 400px;
+            max-height: 750px;
         }
         thead, tbody tr {
             display: table;
@@ -74,7 +74,7 @@
         }
         .table-container {
             width: 100%;
-            max-height: 400px;
+            max-height: 800px;
             margin-top: 20px;
             overflow-y: auto;
         }
@@ -133,6 +133,20 @@
         </div>
     </div>
 
+    <div class="container flex space-x-4 mt-6">
+        <!-- 1) Botão para Excel -->
+        <a
+            href="{{ route('experimentos.downloadExcel', $experimento['id']) }}" class="px-4 py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+            📥 Baixar Dados (Excel)
+        </a>
+
+        <!-- 2) Botão para PNGs -->
+        <button
+            id="btnDownloadPNGs" class="px-4 py-2 mb-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+            🖼️ Baixar Gráficos (PNG)
+        </button>
+    </div>
+
     <div class="container mb-16">
         <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
             <!-- Cabeçalho do Experimento -->
@@ -152,26 +166,58 @@
             <div class="table-container border border-gray-200 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                                Tempo Decorrido
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                                Temperatura (°C)
-                            </th>
-                        </tr>
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
+                        Tempo Decorrido
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
+                        Temperatura (°C)
+                        </th>
+                        <!-- Nova coluna de derivada -->
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
+                        Derivada (dT/dt)
+                        </th>
+                    </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-300">
-                        @foreach ($experimento['dados'] as $linha)
+                    @php
+                        $prev = null;
+                    @endphp
+
+                    @foreach ($experimento['dados'] as $linha)
+                        @php
+                        // Se for a primeira linha, derivada = 0
+                        if (is_null($prev)) {
+                            $deriv = 0;
+                        } else {
+                            $deltaT    = $linha['temperatura'] - $prev['temperatura'];
+                            $deltaTime = $linha['tempo']       - $prev['tempo'];
+                            $deriv     = $deltaTime != 0
+                                        ? $deltaT / $deltaTime
+                                        : 0;
+                        }
+                        // prepara para próxima iteração
+                        $prev = $linha;
+                        @endphp
+
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                {{ $linha['tempo'] ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ $linha['temperatura'] ?? '-' }}
-                            </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                            {{ $linha['tempo'] ?? '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
+                                    {{ $linha['temperatura'] > 30 
+                                        ? 'text-red-600' 
+                                        : 'text-gray-900' }}">
+                            {{ $linha['temperatura'] ?? '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                            {{ number_format($deriv, 2, ',', '.') }}
+                        </td>
                         </tr>
-                        @endforeach
+                    @endforeach
                     </tbody>
                 </table>
             </div>
@@ -387,6 +433,18 @@
             }
 
             addResetButtons();
+            // ======== download dos PNGs =========
+            document
+            .getElementById('btnDownloadPNGs')
+            .addEventListener('click', () => {
+                [temperaturaChart, diferencasChart].forEach((chart, idx) => {
+                // cria link e dispara download
+                const a = document.createElement('a');
+                a.href = chart.toBase64Image();            // data:image/png;base64,...
+                a.download = `grafico_${idx+1}.png`;
+                a.click();
+                });
+            });
         });
     </script>
 </body>

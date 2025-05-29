@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\SheetsController;
 use Illuminate\Http\Request;
+use App\Exports\ExperimentExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class GraficoController extends Controller
 {
@@ -84,5 +86,42 @@ class GraficoController extends Controller
             'diferencas_tempo' => $diferencasTempo,
             'diferencas_temperatura' => $diferencasTemperatura
         ];
+    }
+
+    public function downloadExcel($id)
+    {
+        // Reaproveita a busca do experimento (igual ao show)
+        $experimentos = $this->sheetsController->getExperimentos();
+        $exp = collect($experimentos)
+            ->first(fn($e) => $e['id'] == $id);
+        if (!$exp) {
+            abort(404);
+        }
+
+        // Monta as linhas com derivada (igual ao cálculo em JS)
+        $prev = null;
+        $rows = [];
+        foreach ($exp['dados'] as $linha) {
+            $tempo = $linha['tempo'];
+            $temp  = $linha['temperatura'];
+            if (is_null($prev)) {
+                $deriv = 0;
+            } else {
+                $dT = $temp - $prev['temperatura'];
+                $dt = $tempo - $prev['tempo'];
+                $deriv = $dt != 0 ? $dT / $dt : 0;
+            }
+            $rows[] = [
+                $tempo,
+                $temp,
+                round($deriv, 4)
+            ];
+            $prev = $linha;
+        }
+
+        return Excel::download(
+            new ExperimentExport($rows),
+            "experimento_{$id}.xlsx"
+        );
     }
 }

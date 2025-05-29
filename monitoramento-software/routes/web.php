@@ -15,6 +15,9 @@ Route::delete('/experimentos/{id}', [SheetsController::class, 'destroy'])->name(
 
 Route::post('/experimentos/destroy-range',[SheetsController::class, 'destroyRange'])->name('experimentos.destroyRange');
 
+// Rota para baixar experimento
+Route::get('experimentos/{id}/download-excel',[GraficoController::class, 'downloadExcel'])->name('experimentos.downloadExcel');
+
 // Rotas da planilha
 Route::controller(SheetsController::class)->group(function () {
     Route::get('/planilha', 'index');
