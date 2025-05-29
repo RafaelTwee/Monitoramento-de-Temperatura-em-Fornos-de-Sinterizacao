@@ -80,6 +80,14 @@
                 <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
         </div>
+       <!-- Botão de Exclusão em Massa -->
+      <div class="flex justify-end mb-4">
+            <button id="bulkDeleteBtn"class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                <i class="fas fa-trash-alt mr-1"></i> Excluir em Massa
+            </button>
+        </div>
+
+        @include('partials.delete_modal')
 
         @if (!empty($experimentos))
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -244,5 +252,7 @@
             table.order([1, 'desc']).draw();
         });
     </script>
+    
+    @stack('scripts')
 </body>
 </html>

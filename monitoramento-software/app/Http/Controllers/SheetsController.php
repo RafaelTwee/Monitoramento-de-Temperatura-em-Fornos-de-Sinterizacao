@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Http\Request;
+use Google_Service_Sheets_BatchUpdateSpreadsheetRequest;
 
 use Google\Client;
 use Google\Service\Sheets;
@@ -187,6 +189,74 @@ class SheetsController extends Controller
                         ->with('success', 'Linhas do experimento excluídas com sucesso.');
     }
 
+    public function destroyRange(Request $request)
+    {
+        // 1) Validação das datas
+        $data = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDT = Carbon::parse($data['start_date'])->startOfDay();
+        $endDT   = Carbon::parse($data['end_date'])->endOfDay();
+
+        // 2) Filtra experimentos no período
+        $experimentos = $this->getExperimentos();
+        $toDelete = [];
+        foreach ($experimentos as $exp) {
+            $isoInicio = $this->formatarDataParaISO($exp['inicio']);
+            $dtInicio  = Carbon::parse($isoInicio);
+            if ($dtInicio->between($startDT, $endDT)) {
+                $toDelete[] = $exp;
+            }
+        }
+
+        if (empty($toDelete)) {
+            return redirect()->route('welcome')
+                             ->with('error', 'Nenhum experimento encontrado neste período.');
+        }
+
+        // 3) Inicializa Sheets API
+        $client = new Client();
+        if ($creds = env('GOOGLE_CREDENTIALS_JSON')) {
+            $client->setAuthConfig(json_decode($creds, true));
+        } else {
+            $client->setAuthConfig(base_path('google-credentials.json'));
+        }
+        $client->addScope(\Google\Service\Sheets::SPREADSHEETS);
+        $service       = new Sheets($client);
+        $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
+
+        // 4) Descobre o sheetId da aba "Página1"
+        $meta  = $service->spreadsheets->get($spreadsheetId);
+        $sheet = collect($meta->getSheets())
+            ->first(fn($s) => $s->getProperties()->getTitle() === 'Página1');
+        $sheetId = $sheet->getProperties()->getSheetId();
+
+        // 5) Monta vários deleteDimension (em ordem decrescente de startRow)
+        usort($toDelete, fn($a, $b) => $b['startRow'] <=> $a['startRow']);
+        $requests = [];
+        foreach ($toDelete as $exp) {
+            $requests[] = [
+                'deleteDimension' => [
+                    'range' => [
+                        'sheetId'    => $sheetId,
+                        'dimension'  => 'ROWS',
+                        'startIndex' => $exp['startRow'] - 1,
+                        'endIndex'   => $exp['endRow'],
+                    ]
+                ]
+            ];
+        }
+
+        // 6) Executa o batchUpdate para remover todas as faixas de uma vez
+        $batch = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
+            'requests' => $requests,
+        ]);
+        $service->spreadsheets->batchUpdate($spreadsheetId, $batch);
+
+        return redirect()->route('welcome')->with('success', 'Experimentos excluídos com sucesso.');
+    }
 
 
     private function formatarDataParaISO($data)

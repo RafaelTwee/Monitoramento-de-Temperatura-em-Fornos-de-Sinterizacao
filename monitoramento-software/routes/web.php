@@ -13,6 +13,8 @@ Route::get('/', function () {
 // Rota para excluir experimento
 Route::delete('/experimentos/{id}', [SheetsController::class, 'destroy'])->name('experimentos.destroy');
 
+Route::post('/experimentos/destroy-range',[SheetsController::class, 'destroyRange'])->name('experimentos.destroyRange');
+
 // Rotas da planilha
 Route::controller(SheetsController::class)->group(function () {
     Route::get('/planilha', 'index');
