@@ -14,7 +14,14 @@ class GoogleSheetService
         $client = new Google_Client();
 
         $googleCredentials = env('GOOGLE_CREDENTIALS_JSON');
-        $decodedCredentials = json_decode($googleCredentials, true);
+
+        if ($googleCredentials) {
+            $credentials = json_decode($googleCredentials, true);
+        } else {
+            $credentials = base_path('google-credentials.json');
+        }
+
+        $client->setAuthConfig($credentials);
         
         $client->setApplicationName('Google Sheets');
         $client->setScopes([Google_Service_Sheets::SPREADSHEETS]);
