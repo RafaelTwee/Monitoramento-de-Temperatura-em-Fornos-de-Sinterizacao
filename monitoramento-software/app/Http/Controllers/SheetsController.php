@@ -25,9 +25,6 @@ class SheetsController extends Controller
         } else {
             $credentials = base_path('google-credentials.json');
         }
-
-        $client->setAuthConfig($credentials);
-
         
         $client->setAuthConfig($credentials);
         $client->addScope(Sheets::SPREADSHEETS_READONLY);
@@ -149,7 +146,16 @@ class SheetsController extends Controller
 
         // 3) Inicializa cliente e serviço
         $client = new \Google\Client();
-        $client->setAuthConfig(base_path('google-credentials.json'));
+
+        $googleCredentials = env('GOOGLE_CREDENTIALS_JSON');
+
+        if ($googleCredentials) {
+            $credentials = json_decode($googleCredentials, true);
+            $client->setAuthConfig($credentials);
+        } else {
+            $client->setAuthConfig(base_path('google-credentials.json'));
+        }
+
         $client->addScope(\Google\Service\Sheets::SPREADSHEETS);
         $service = new \Google\Service\Sheets($client);
 
