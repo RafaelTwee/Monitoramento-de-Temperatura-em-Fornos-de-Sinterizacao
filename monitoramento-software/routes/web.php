@@ -10,6 +10,9 @@ Route::get('/', function () {
     return view('welcome', ['experimentos' => $experimentos]);
 })->name('welcome');
 
+// Rota para atualizar apenas o nome
+Route::patch('/experimentos/{id}/nome', [SheetsController::class, 'updateNome'])->name('experimentos.updateNome');
+
 // Rota para excluir experimento
 Route::delete('/experimentos/{id}', [SheetsController::class, 'destroy'])->name('experimentos.destroy');
 

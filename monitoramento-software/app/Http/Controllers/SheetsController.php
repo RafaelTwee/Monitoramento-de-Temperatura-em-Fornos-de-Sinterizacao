@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Google_Service_Sheets_BatchUpdateSpreadsheetRequest;
-
+use Google_Service_Sheets_ValueRange;
 use Google\Client;
 use Google\Service\Sheets;
 use Carbon\Carbon;
@@ -19,7 +19,6 @@ class SheetsController extends Controller
     public function getExperimentos()
     {
         $client = new Client();
-        
         $googleCredentials = env('GOOGLE_CREDENTIALS_JSON');
 
         if ($googleCredentials) {
@@ -27,7 +26,7 @@ class SheetsController extends Controller
         } else {
             $credentials = base_path('google-credentials.json');
         }
-        
+
         $client->setAuthConfig($credentials);
         $client->addScope(Sheets::SPREADSHEETS_READONLY);
 
@@ -42,44 +41,48 @@ class SheetsController extends Controller
         $processando         = false;
         $dataInicio          = null;
         $nomeExperimento     = null;
-        $headerOffset        = 2;                   // dados começam na linha 2 da sheet
-        $startRow            = null;                // será definido ao iniciar experimento
+        $headerOffset        = 2;      // dados começam na linha 2 da sheet
+        $startRow            = null;   // será definido ao iniciar experimento
 
         foreach ($values as $idx => $row) {
-            $rowNumber = $headerOffset + $idx;     // linha real na planilha
+            $rowNumber = $headerOffset + $idx;  // linha real na planilha (1‐based)
 
             if (! empty($row[0])) {
                 // encontrou data/hora → início ou término de experimento
                 if (! $processando) {
-                    // INÍCIO
-                    $processando      = true;
-                    $startRow         = $rowNumber;
-                    $dataInicio       = $row[0];
-                    $nomeExperimento  = $row[3] ?? '';
+                    // ------ INÍCIO ------
+                    $processando     = true;
+                    $startRow        = $rowNumber;
+                    $dataInicio      = $row[0];
+                    $nomeExperimento = $row[3] ?? '';
 
-                    // registra primeira medição
-                    if (isset($row[1])) {
-                        $experimentoAtual[] = [
-                            'tempo'        => $row[1],
-                            'temperatura'  => $row[2] ?? null
-                        ];
-                    }
-                } else {
-                    // FIM do experimento atual
-                    // adiciona última medição
+                    // registra primeira medição (se existir)
                     if (isset($row[1])) {
                         $experimentoAtual[] = [
                             'tempo'       => $row[1],
-                            'temperatura' => $row[2] ?? null
+                            'temperatura' => $row[2] ?? null,
+                        ];
+                    }
+                } else {
+                    // ------ FIM do experimento atual ------
+                    // adiciona última medição (se existir)
+                    if (isset($row[1])) {
+                        $experimentoAtual[] = [
+                            'tempo'       => $row[1],
+                            'temperatura' => $row[2] ?? null,
                         ];
                     }
 
                     $endRow = $rowNumber;
 
-                    // monta o array completo e anexa start/end
+                    // monta array com dados brutos (sem id ainda)
                     $exp = $this->criarExperimento($dataInicio, $row[0], $nomeExperimento, $experimentoAtual);
+
+                    // agora acrescenta startRow, endRow e id estável
                     $exp['startRow'] = $startRow;
                     $exp['endRow']   = $endRow;
+                    $exp['id']       = md5($dataInicio . $startRow);
+
                     $experimentos[]  = $exp;
 
                     // reseta para o próximo
@@ -91,13 +94,13 @@ class SheetsController extends Controller
                 if (isset($row[1])) {
                     $experimentoAtual[] = [
                         'tempo'       => $row[1],
-                        'temperatura' => $row[2] ?? null
+                        'temperatura' => $row[2] ?? null,
                     ];
                 }
             }
         }
 
-        // se terminou lendo e ainda havia um experimento em aberto:
+        // se terminou lendo e ainda havia um experimento em aberto
         if ($processando && ! empty($experimentoAtual)) {
             $lastIdx = count($values) - 1;
             $endRow  = $headerOffset + $lastIdx;
@@ -105,27 +108,93 @@ class SheetsController extends Controller
             $exp = $this->criarExperimento($dataInicio, null, $nomeExperimento, $experimentoAtual);
             $exp['startRow'] = $startRow;
             $exp['endRow']   = $endRow;
+            $exp['id']       = md5($dataInicio . $startRow);
             $experimentos[]  = $exp;
         }
 
         return $experimentos;
     }
 
-
-   private function criarExperimento($inicio, $fim, $nome, $dados)
+    private function criarExperimento($inicio, $fim, $nome, $dados)
     {
         return [
-            'id' => md5($inicio.$nome),
-            'nome' => $nome,
+            // removemos o 'id' daqui, pois ele será gerado depois com startRow
+            'nome'   => $nome,
             'inicio' => $inicio,
-            'fim' => $fim,
-            'dados' => array_map(function($medicao) {
+            'fim'    => $fim,
+            'dados'  => array_map(function($medicao) {
                 return [
-                    'tempo' => str_replace(',', '.', $medicao['tempo']),
+                    'tempo'       => str_replace(',', '.', $medicao['tempo']),
                     'temperatura' => str_replace(',', '.', $medicao['temperatura'])
                 ];
-            }, $dados)
+            }, $dados),
         ];
+    }
+
+    public function updateNome(Request $request, $id)
+    {
+        // Validação simples: nome obrigatório, no máximo 255 caracteres
+        $data = $request->validate([
+            'nome' => 'required|string|max:255',
+        ]);
+
+        // Carrega TODOS os experimentos e tenta achar o que tem id === $id
+        $todos = $this->getExperimentos();
+        $toUpdate = collect($todos)->first(fn($exp) => $exp['id'] === $id);
+
+        if (! $toUpdate) {
+            return response()->json([
+                'message' => 'Experimento não encontrado.'
+            ], 404);
+        }
+
+        $startRow = $toUpdate['startRow']; // linha em que o nome está na coluna D
+
+        // Inicializa cliente e serviço do Google Sheets
+        $client = new Client();
+
+        if ($creds = env('GOOGLE_CREDENTIALS_JSON')) {
+            $client->setAuthConfig(json_decode($creds, true));
+        } else {
+            $client->setAuthConfig(base_path('google-credentials.json'));
+        }
+
+        $client->addScope(Sheets::SPREADSHEETS);
+        $service = new Sheets($client);
+
+        $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
+
+        // Prepara para sobrescrever a coluna D na linha $startRow
+        $novoNome = $data['nome'];
+        $range = "Página1!D{$startRow}:D{$startRow}";
+
+        $valueRange = new Google_Service_Sheets_ValueRange([
+            'values' => [
+                [ (string) $novoNome ]
+            ]
+        ]);
+
+        $params = [
+            'valueInputOption' => 'USER_ENTERED'
+        ];
+
+        try {
+            $service->spreadsheets_values->update(
+                $spreadsheetId,
+                $range,
+                $valueRange,
+                $params
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Falha ao gravar no Google Sheets: ' . $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'sucesso',
+            'nome'   => $novoNome,
+        ]);
     }
 
     

@@ -1,3 +1,4 @@
+{{-- resources/views/experimentos/grafico.blade.php --}}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -106,18 +107,44 @@
 </head>
 <body>
     <div class="container">
-        <div class="flex justify-between items-center mb-4 mt-8"> 
+        <div class="flex justify-between items-center mb-4 mt-8">
             <h1 class="text-3xl font-bold text-gray-800">
                 <i class="fas fa-chart-line mr-2"></i> Gráfico do Experimento
             </h1>
-            <a href="{{ route('welcome') }}" class="btn-voltar" >
-                <i class="fas fa-arrow-left mr-1 "></i> Voltar
+            <a href="{{ route('welcome') }}" class="btn-voltar">
+                <i class="fas fa-arrow-left mr-1"></i> Voltar
             </a>
         </div>
-        <h2 class="text-xl font-semibold text-gray-800">{{ $experimento['nome'] }}</h2>
+
+        {{-- ================= Nome editável ================= --}}
+        <div class="flex items-center space-x-2">
+            <span id="nomeTexto" class="text-xl font-semibold text-gray-800">
+                {{ $experimento['nome'] }}
+            </span>
+            <button id="btnEditar" type="button" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-pencil-alt"></i>
+            </button>
+        </div>
+        <div id="areaEdicao" class="mt-2 hidden">
+            <input
+                type="text"
+                id="inputNome"
+                class="border border-gray-300 rounded px-2 py-1 text-gray-800"
+                value="{{ $experimento['nome'] }}"
+                maxlength="255"
+            >
+            <button id="btnSalvarNome" class="ml-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                Salvar
+            </button>
+            <button id="btnCancelarEdicao" class="ml-1 px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                Cancelar
+            </button>
+            <p id="erroNome" class="text-sm text-red-600 mt-1 hidden"></p>
+        </div>
+        {{-- ================================================= --}}
     </div>
-    
-    <!-- Container para os dois gráficos -->
+
+    {{-- Container para os dois gráficos --}}
     <div class="container">
         <div class="charts-container">
             <div class="chart-wrapper">
@@ -136,13 +163,17 @@
     <div class="container flex space-x-4 mt-6">
         <!-- 1) Botão para Excel -->
         <a
-            href="{{ route('experimentos.downloadExcel', $experimento['id']) }}" class="px-4 py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+            href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
+            class="px-4 py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >
             📥 Baixar Dados (Excel)
         </a>
 
         <!-- 2) Botão para PNGs -->
         <button
-            id="btnDownloadPNGs" class="px-4 py-2 mb-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+            id="btnDownloadPNGs"
+            class="px-4 py-2 mb-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
             🖼️ Baixar Gráficos (PNG)
         </button>
     </div>
@@ -154,9 +185,18 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="flex space-x-4 mt-2 text-sm text-gray-800">
-                            <span><i class="far fa-clock mr-1"></i> <strong>Início:</strong> {{ $experimento['inicio'] }}</span>
-                            <span><i class="far fa-clock mr-1"></i> <strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}</span>
-                            <span><i class="fas fa-ruler-combined mr-1"></i> <strong>Medições:</strong> {{ count($experimento['dados']) }}</span>
+                            <span>
+                                <i class="far fa-clock mr-1"></i>
+                                <strong>Início:</strong> {{ $experimento['inicio'] }}
+                            </span>
+                            <span>
+                                <i class="far fa-clock mr-1"></i>
+                                <strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}
+                            </span>
+                            <span>
+                                <i class="fas fa-ruler-combined mr-1"></i>
+                                <strong>Medições:</strong> {{ count($experimento['dados']) }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -166,64 +206,72 @@
             <div class="table-container border border-gray-200 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                        Tempo Decorrido
-                        </th>
-                        <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                        Temperatura (°C)
-                        </th>
-                        <!-- Nova coluna de derivada -->
-                        <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider">
-                        Derivada (dT/dt)
-                        </th>
-                    </tr>
+                        <tr>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Tempo Decorrido
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Temperatura (°C)
+                            </th>
+                            <!-- Nova coluna de derivada -->
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Derivada (dT/dt)
+                            </th>
+                        </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-300">
-                    @php
-                        $prev = null;
-                    @endphp
-
-                    @foreach ($experimento['dados'] as $linha)
                         @php
-                        // Se for a primeira linha, derivada = 0
-                        if (is_null($prev)) {
-                            $deriv = 0;
-                        } else {
-                            $deltaT    = $linha['temperatura'] - $prev['temperatura'];
-                            $deltaTime = $linha['tempo']       - $prev['tempo'];
-                            $deriv     = $deltaTime != 0
-                                        ? $deltaT / $deltaTime
-                                        : 0;
-                        }
-                        // prepara para próxima iteração
-                        $prev = $linha;
+                            $prev = null;
                         @endphp
 
-                        <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                            {{ $linha['tempo'] ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
-                                    {{ $linha['temperatura'] > 30 
-                                        ? 'text-red-600' 
-                                        : 'text-gray-900' }}">
-                            {{ $linha['temperatura'] ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                            {{ number_format($deriv, 2, ',', '.') }}
-                        </td>
-                        </tr>
-                    @endforeach
+                        @foreach ($experimento['dados'] as $linha)
+                            @php
+                                // Se for a primeira linha, derivada = 0
+                                if (is_null($prev)) {
+                                    $deriv = 0;
+                                } else {
+                                    $deltaT    = $linha['temperatura'] - $prev['temperatura'];
+                                    $deltaTime = $linha['tempo']       - $prev['tempo'];
+                                    $deriv     = $deltaTime != 0
+                                                ? $deltaT / $deltaTime
+                                                : 0;
+                                }
+                                $prev = $linha;
+                            @endphp
+
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                    {{ $linha['tempo'] ?? '-' }}
+                                </td>
+                                <td
+                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium
+                                        {{ $linha['temperatura'] > 30 
+                                            ? 'text-red-600' 
+                                            : 'text-gray-900' }}"
+                                >
+                                    {{ $linha['temperatura'] ?? '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                    {{ number_format($deriv, 2, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    {{-- ================= SCRIPT de Chart.js + Zoom ================= --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let temperaturaChart;
@@ -231,7 +279,7 @@
 
             // Registrar o plugin de zoom
             Chart.register(ChartZoom);
-        
+
             // Configurações comuns de zoom
             const zoomOptions = {
                 pan: {
@@ -248,7 +296,6 @@
                     },
                     mode: 'xy',
                     onZoom: ({chart}) => {
-                        // Guarda o estado original do zoom
                         chart.originalScaleLimits = {
                             x: {min: chart.scales.x.min, max: chart.scales.x.max},
                             y: {min: chart.scales.y.min, max: chart.scales.y.max}
@@ -259,10 +306,9 @@
 
             // Gráfico de temperatura original
             const ctxTemperatura = document.getElementById('temperaturaChart');
-            
             const labels = @json($dadosGrafico['labels']);
             const data = @json($dadosGrafico['temperaturas']);
-            
+
             if (!labels || !data || labels.length === 0 || data.length === 0) {
                 console.error('Dados do gráfico vazios:', {labels, data});
                 ctxTemperatura.innerHTML = '<p class="text-danger">Nenhum dado disponível para exibição</p>';
@@ -273,7 +319,6 @@
             const numericLabels = labels.map(Number);
 
             temperaturaChart = new Chart(ctxTemperatura, {
-
                 type: 'line',
                 data: {
                     labels: numericLabels,
@@ -320,14 +365,13 @@
 
             // Gráfico de derivadas (dT/dt) vs tempo
             const ctxDiferencas = document.getElementById('diferencasChart');
-                        
-            // Calcula as derivadas (ΔT/Δt) entre medições consecutivas
+
             const derivadas = [];
             const labelsDerivada = [];
 
             for (let i = 0; i < numericLabels.length; i++) {
                 if (i === 0) {
-                    derivadas.push(0); // Primeiro ponto tem derivada zero
+                    derivadas.push(0);
                 } else {
                     const deltaT = numericData[i] - numericData[i-1];
                     const deltaTime = numericLabels[i] - numericLabels[i-1];
@@ -336,7 +380,6 @@
                 labelsDerivada.push(numericLabels[i]);
             }
 
-            // Cria o gráfico de derivadas
             diferencasChart = new Chart(ctxDiferencas, {
                 type: 'line',
                 data: {
@@ -413,7 +456,7 @@
             function addResetButtons() {
                 const resetZoom = (chart) => {
                     if (chart) {
-                        chart.resetZoom(); // método do plugin chartjs-plugin-zoom
+                        chart.resetZoom();
                     }
                 };
 
@@ -433,19 +476,111 @@
             }
 
             addResetButtons();
+
             // ======== download dos PNGs =========
             document
-            .getElementById('btnDownloadPNGs')
-            .addEventListener('click', () => {
-                [temperaturaChart, diferencasChart].forEach((chart, idx) => {
-                // cria link e dispara download
-                const a = document.createElement('a');
-                a.href = chart.toBase64Image();            // data:image/png;base64,...
-                a.download = `grafico_${idx+1}.png`;
-                a.click();
+                .getElementById('btnDownloadPNGs')
+                .addEventListener('click', () => {
+                    [temperaturaChart, diferencasChart].forEach((chart, idx) => {
+                        const a = document.createElement('a');
+                        a.href = chart.toBase64Image();
+                        a.download = `grafico_${idx+1}.png`;
+                        a.click();
+                    });
                 });
-            });
         });
     </script>
+
+    {{-- ========= SCRIPT de “in-place edit” ========= --}}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Referências aos elementos do DOM
+        const nomeTexto        = document.getElementById('nomeTexto');
+        const btnEditar        = document.getElementById('btnEditar');
+        const areaEdicao       = document.getElementById('areaEdicao');
+        const inputNome        = document.getElementById('inputNome');
+        const btnSalvarNome    = document.getElementById('btnSalvarNome');
+        const btnCancelarEdicao= document.getElementById('btnCancelarEdicao');
+        const erroNome         = document.getElementById('erroNome');
+
+        // ID do experimento (mesmo que o SheetsController gerou via md5(início+startRow))
+        const experimentoId = "{{ $experimento['id'] }}";
+
+        // Ao clicar no ícone de lápis → mostra o campo de edição
+        btnEditar.addEventListener('click', () => {
+            nomeTexto.classList.add('hidden');
+            btnEditar.classList.add('hidden');
+            areaEdicao.classList.remove('hidden');
+            inputNome.focus();
+        });
+
+        // Ao clicar em “Cancelar” → reverte ao estado original
+        btnCancelarEdicao.addEventListener('click', () => {
+            inputNome.value = nomeTexto.textContent.trim();
+            erroNome.classList.add('hidden');
+            areaEdicao.classList.add('hidden');
+            nomeTexto.classList.remove('hidden');
+            btnEditar.classList.remove('hidden');
+        });
+
+        // Ao clicar em “Salvar” → dispara o patch via fetch
+        btnSalvarNome.addEventListener('click', async () => {
+            const novoNome = inputNome.value.trim();
+            erroNome.textContent = '';
+            erroNome.classList.add('hidden');
+
+            if (novoNome.length === 0) {
+                erroNome.textContent = 'O nome não pode ficar vazio.';
+                erroNome.classList.remove('hidden');
+                return;
+            }
+
+            const payload = {
+                nome: novoNome,
+                _token: '{{ csrf_token() }}'
+            };
+
+            try {
+                const resposta = await fetch(
+                    `{{ url('/experimentos') }}/${experimentoId}/nome`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (!resposta.ok) {
+                    const jsonErro = await resposta.json();
+                    throw new Error(jsonErro.message || 'Erro ao atualizar.');
+                }
+
+                const dados = await resposta.json();
+                // Atualiza o texto e volta para modo readonly
+                nomeTexto.textContent = dados.nome;
+                areaEdicao.classList.add('hidden');
+                nomeTexto.classList.remove('hidden');
+                btnEditar.classList.remove('hidden');
+            } catch (err) {
+                erroNome.textContent = err.message || 'Não foi possível salvar.';
+                erroNome.classList.remove('hidden');
+            }
+        });
+
+        // Enter = Salvar, Escape = Cancelar
+        inputNome.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                btnSalvarNome.click();
+            }
+            if (e.key === 'Escape') {
+                btnCancelarEdicao.click();
+            }
+        });
+    });
+    </script>
+    {{-- =========================================== --}}
 </body>
 </html>
