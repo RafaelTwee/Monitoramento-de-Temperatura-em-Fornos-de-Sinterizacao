@@ -106,6 +106,12 @@
             margin-top: 20px;
         }
         .text-danger { color: red; }
+
+        /* Aumento de fonte para cabeçalho e células da tabela */
+        .table-container table th,
+        .table-container table td {
+            font-size: 1rem; /* ajuste para o tamanho desejado */
+        }
     </style>
 </head>
 <body>
@@ -155,6 +161,8 @@
                     <canvas id="temperaturaChart"></canvas>
                     <!-- slider logo abaixo do eixo x -->
                     <div id="rangeSlider" class="mt-2"></div>
+                    <!-- exibe os valores selecionados -->
+                    <div id="rangeValues" class="text-sm text-gray-700 mt-1"></div>
                 </div>
             </div>
             <div class="chart-wrapper">
@@ -257,15 +265,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                                     {{ $linha['tempo'] ?? '-' }}
                                 </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium
-                                        {{ $linha['temperatura'] > 30 
-                                            ? 'text-red-600' 
-                                            : 'text-gray-900' }}"
-                                >
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
                                     {{ $linha['temperatura'] ?? '-' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $deriv < 0 ? 'text-red-600' : 'text-blue-600' }}">
                                     {{ number_format($deriv, 2, ',', '.') }}
                                 </td>
                             </tr>
@@ -326,32 +329,35 @@
             temperaturaChart = new Chart(ctxTemperatura, {
                 type: 'line',
                 data: {
-                    labels: numericLabels,
                     datasets: [{
                         label: 'Temperatura (°C)',
-                        data: numericData,
+                        // dados como {x: instante, y: temperatura}
+                        data: numericLabels.map((t,i) => ({ x: t, y: numericData[i] })),
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderWidth: 2,
                         tension: 0.1,
-                        fill: true
+                        fill: true,
+                        parsing: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Tempo Decorrido'
+                            }
+                        },
                         y: {
                             beginAtZero: false,
                             title: {
                                 display: true,
                                 text: 'Temperatura (°C)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tempo Decorrido'
                             }
                         }
                     },
@@ -388,17 +394,17 @@
             diferencasChart = new Chart(ctxDiferencas, {
                 type: 'line',
                 data: {
-                    labels: labelsDerivada,
                     datasets: [{
                         label: 'Taxa de Variação (dT/dt)',
-                        data: derivadas,
-                        backgroundColor: function(context) {
-                            return context.raw >= 0 
+                        data: labelsDerivada.map((t,i) => ({ x: t, y: derivadas[i] })),
+                        parsing: false,
+                        backgroundColor: function(ctx) {
+                            return ctx.raw >= 0 
                                 ? 'rgba(255, 99, 132, 0.7)' 
                                 : 'rgba(54, 162, 235, 0.7)';
                         },
-                        borderColor: function(context) {
-                            return context.raw >= 0 
+                        borderColor: function(ctx) {
+                            return ctx.raw >= 0 
                                 ? 'rgba(255, 99, 132, 1)' 
                                 : 'rgba(54, 162, 235, 1)';
                         },
@@ -411,18 +417,20 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Tempo Decorrido (s)'
+                            }
+                        },
                         y: {
                             title: {
                                 display: true,
                                 text: 'Taxa de Variação (°C/s)'
                             },
                             beginAtZero: false
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Tempo Decorrido (s)'
-                            }
                         }
                     },
                     plugins: {
@@ -494,19 +502,9 @@
                     });
                 });
 
-            // prepare dados numéricos
-            const allData = @json($experimento['dados']);
-            const timeLabels = allData.map(d => Number(d.tempo));
-            const temps      = allData.map(d => Number(d.temperatura));
-
-            // Cria slider
-            const slider = document.getElementById('rangeSlider');
-            noUiSlider.create(slider, {
-                start: [timeLabels[0], timeLabels.at(-1)],
-                connect: true,
-                range: { min: timeLabels[0], max: timeLabels.at(-1) },
-                step: 1
-            });
+            // prepare dados numéricos para slider
+            // cria array de índices correspondentes aos instantes
+            const indices = numericLabels.map((_, i) => i);
 
             // função genérica de filtro
             function filterTable(start, end) {
@@ -516,14 +514,37 @@
                 });
             }
 
-            // ao arrastar slider, filtra tabela
-            slider.noUiSlider.on('update', (values) => {
-                const [start, end] = values.map(Number);
-                filterTable(start, end);
+            // Cria slider usando valores reais de tempo
+            const slider = document.getElementById('rangeSlider');
+            noUiSlider.create(slider, {
+                start: [numericLabels[0], numericLabels.at(-1)],
+                connect: true,
+                range: { min: numericLabels[0], max: numericLabels.at(-1) },
+                step: 1,
+                tooltips: [true, true]
             });
 
-            // chama a função de filtro inicialmente para mostrar todas as linhas
-            filterTable(timeLabels[0], timeLabels.at(-1));
+            const rangeValues = document.getElementById('rangeValues');
+
+            // ao arrastar slider, converte strings→números diretamente
+            slider.noUiSlider.on('update', (values) => {
+               const start = Number(values[0]);
+               const end   = Number(values[1]);
+
+                filterTable(start, end);
+                rangeValues.textContent = `Início: ${start} — Fim: ${end}`;
+
+                // limita eixos X dos gráficos
+                temperaturaChart.options.scales.x.min = start;
+                temperaturaChart.options.scales.x.max = end;
+                temperaturaChart.update();
+                diferencasChart.options.scales.x.min = start;
+                diferencasChart.options.scales.x.max = end;
+                diferencasChart.update();
+            });
+
+            // filtro inicial
+            filterTable(numericLabels[0], numericLabels.at(-1));
         });
     </script>
 
