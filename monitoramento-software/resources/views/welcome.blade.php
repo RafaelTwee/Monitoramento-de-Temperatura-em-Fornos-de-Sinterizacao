@@ -70,34 +70,74 @@
             background-color: #d1d5db;
         }
 
+        /* filtros inline */
+        .filter-date { @apply w-32 px-2 py-1 border border-gray-300 rounded placeholder-gray-400; }
+        .dataTables_filter input { @apply w-48 px-2 py-1 border border-gray-300 rounded placeholder-gray-400; }
 
+        /* modal com borda uniforme */
+        .modal { @apply rounded-2xl !important; }
+        /* zebra striping já aplicada, agora ações só aparecem no hover */
+        tbody tr .actions { opacity: 0; transition: opacity .2s; }
+        tbody tr:hover .actions { opacity: 1; }
+        /* td typography */
+        .table-container table td { @apply text-gray-700 font-normal; }
+
+        /* 1) ícones de ação sempre visíveis */
+        tbody tr .actions {
+            opacity: 1 !important;
+        }
+
+        /* 2) centraliza todas as células */
+        #tabelaExperimentos th,
+        #tabelaExperimentos td {
+            text-align: center;
+        }
+
+        /* 3) mantém a coluna de Ações alinhada à direita */
+        #tabelaExperimentos th:last-child,
+        #tabelaExperimentos td:last-child {
+            text-align: right;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">
+    <div class="container mx-auto px-6 py-10">
+        <!-- cabeçalho + estatísticas rápidas -->
+        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-gray-200 pb-6">
+            <h1 class="text-3xl font-semibold text-gray-800">
                 <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
+            <div class="flex space-x-4 text-gray-600">
+                <div class="flex items-center"><i class="fas fa-database mr-1"></i>Total: <span class="font-medium ml-1">{{ count($experimentos) }}</span></div>
+                <div class="flex items-center"><i class="fas fa-clock mr-1"></i>Último: <span class="font-medium ml-1"> {{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }} </span></div>
+            </div>
         </div>
-       <!-- Botão de Exclusão em Massa -->
-      <div class="flex justify-end mb-4">
-            <button id="bulkDeleteBtn"class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
-                <i class="fas fa-trash-alt mr-1"></i> Excluir em Massa
-            </button>
-        </div>
-
         @include('partials.delete_modal')
-
         @if (!empty($experimentos))
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- action bar fixa -->
+            <div class="flex flex-wrap gap-2 items-center mb-4">
+                <button
+                    id="bulkDeleteBtn"
+                    class="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                    title="Excluir em Massa"
+                >
+                    <i class="fas fa-trash-alt mr-2"></i> Excluir em Massa
+                </button>
+                <button
+                    id="limparFiltros"
+                    class="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                    title="Limpar filtros"
+                >
+                    <i class="fas fa-eraser mr-2"></i> Limpar filtros
+                </button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-6 space-y-4">
                 <div class="flex justify-end p-4">
-                    <button id="limparFiltros" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition mr-0">
-                        <i class="fas fa-eraser mr-2"></i> Limpar Filtros
-                    </button>
                 </div>
-                <table id="tabelaExperimentos" class="w-full  text-sm text-gray-500">
-                    <thead>
+               <!-- tabela responsiva com zebra + hover -->
+               <div class="overflow-x-auto -mx-6 px-6">
+                   <table id="tabelaExperimentos" class="min-w-full divide-y divide-gray-200 table-auto">
+                        <thead class="bg-gray-50">
                         <tr>
                             <th>Experimento</th>
                             <th>Início</th>
@@ -108,7 +148,7 @@
                             <th class="text-right">Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200 odd:bg-white even:bg-gray-50 hover:shadow-sm transition">
                         @foreach ($experimentos as $experimento)
                         @php
                             $temperaturas = array_column($experimento['dados'], 'temperatura');
@@ -120,7 +160,7 @@
                             $inicioISO = $experimento['inicio'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['inicio']))) : '';
                             $fimISO = $experimento['fim'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['fim']))) : '';
                         @endphp
-                        <tr>
+                        <tr class="hover:bg-indigo-100/50 transition-colors duration-150">
                             <td>{{ $experimento['nome'] }}</td>
                             <td data-order="{{ $inicioISO }}">{{ $experimento['inicio'] }}</td>
                             <td data-order="{{ $fimISO }}">
@@ -131,30 +171,24 @@
                                 {{ $maxTemp }}
                             </td>
                             <td>{{ $avgTemp }}</td>
-                            <td class="text-right flex justify-end space-x-2">
-                                <!-- Botão de Gráfico -->
+                            <td class="text-right actions space-x-2">
+                                <!-- ícones + tooltip -->
                                 <a href="{{ route('experimentos.grafico', $experimento['id']) }}"
-                                class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                                    <i class="fas fa-chart-line mr-1"></i> Gráfico
+                                   class="p-2 rounded-full hover:bg-indigo-100" title="Ver Gráfico">
+                                   <i class="fas fa-chart-line text-indigo-600"></i>
                                 </a>
-
-                                <!-- Botão de Excluir -->
-                                <form action="{{ route('experimentos.destroy', $experimento['id']) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Tem certeza que deseja excluir este experimento?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
-                                        <i class="fas fa-trash-alt mr-1"></i> Excluir
+                                <form action="{{ route('experimentos.destroy', $experimento['id']) }}" method="POST" onsubmit="return confirm('Confirma?');" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-2 rounded-full hover:bg-red-100" title="Excluir">
+                                        <i class="fas fa-trash-alt text-red-600"></i>
                                     </button>
                                 </form>
-                            </td>
-
-                        </tr>
+                             </td>
+                         </tr>
                         @endforeach
                     </tbody>
-                </table>
+                   </table>
+               </div>
             </div>
         @else
             <div class="bg-white rounded-xl shadow-md p-8 text-center">
