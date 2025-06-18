@@ -9,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- noUiSlider CSS e JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.7.0/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.7.0/nouislider.min.js"></script>
 
     <style>
         body { 
@@ -150,6 +153,8 @@
             <div class="chart-wrapper">
                 <div class="chart-container">
                     <canvas id="temperaturaChart"></canvas>
+                    <!-- slider logo abaixo do eixo x -->
+                    <div id="rangeSlider" class="mt-2"></div>
                 </div>
             </div>
             <div class="chart-wrapper">
@@ -488,6 +493,37 @@
                         a.click();
                     });
                 });
+
+            // prepare dados numéricos
+            const allData = @json($experimento['dados']);
+            const timeLabels = allData.map(d => Number(d.tempo));
+            const temps      = allData.map(d => Number(d.temperatura));
+
+            // Cria slider
+            const slider = document.getElementById('rangeSlider');
+            noUiSlider.create(slider, {
+                start: [timeLabels[0], timeLabels.at(-1)],
+                connect: true,
+                range: { min: timeLabels[0], max: timeLabels.at(-1) },
+                step: 1
+            });
+
+            // função genérica de filtro
+            function filterTable(start, end) {
+                document.querySelectorAll('.table-container tbody tr').forEach(row => {
+                    const t = Number(row.children[0].textContent);
+                    row.style.display = (t >= start && t <= end) ? '' : 'none';
+                });
+            }
+
+            // ao arrastar slider, filtra tabela
+            slider.noUiSlider.on('update', (values) => {
+                const [start, end] = values.map(Number);
+                filterTable(start, end);
+            });
+
+            // chama a função de filtro inicialmente para mostrar todas as linhas
+            filterTable(timeLabels[0], timeLabels.at(-1));
         });
     </script>
 
