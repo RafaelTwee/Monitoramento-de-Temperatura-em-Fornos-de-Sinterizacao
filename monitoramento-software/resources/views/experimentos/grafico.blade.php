@@ -112,6 +112,14 @@
         .table-container table td {
             font-size: 1rem; /* ajuste para o tamanho desejado */
         }
+
+        /* zebra striping nas linhas da tabela */
+        .table-container table tbody tr:nth-child(odd) {
+            background-color: #f9fafb;
+        }
+        .table-container table tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -173,7 +181,7 @@
         </div>
     </div>
 
-    <div class="container flex space-x-4 mt-6">
+    <div class="container flex space-x-4 mt-10">
         <!-- 1) Botão para Excel -->
         <a
             href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
