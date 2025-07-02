@@ -30,29 +30,18 @@
             position: relative;
         }
 
-        /* layout de chart-container */
+        /* chart-container relativo e margens padronizadas */
         .chart-container {
-          position: relative;
-          margin-top: 1.5rem;      /* mt-6 */
-          height: 400px;
-          width: 100%;
+            @apply relative mt-6;
+            height: 400px;
+            width: 100%;
         }
 
-        /* botão como bloco logo abaixo do chart-container */
+        /* reset-zoom concise dentro de chart-container */
         .reset-zoom {
-          display: inline-block;
-          margin: 0.75rem 0;          /* 12px cima e baixo */
-          background-color: #3b82f6;
-          color: #fff;
-          font-weight: 700;
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.25rem;
-          font-size: 0.75rem;
-          cursor: pointer;
-          transition: background-color .2s;
-        }
-        .reset-zoom:hover {
-          background-color: #1e40af;
+            @apply absolute top-2 right-2 bg-blue-500 hover:bg-blue-700
+                    text-white font-bold py-1 px-2 rounded text-xs;
+            opacity: .8;
         }
         
         .chart-wrapper {
@@ -188,8 +177,8 @@
           <div>
             <div class="chart-container">
                 <canvas id="temperaturaChart"></canvas>
-                <div id="rangeSlider" class="mt-4 mb-6"></div>
-                <div id="rangeValues" class="mb-6 text-sm text-gray-700"></div>
+                <div id="rangeSlider" class="mt-4"></div>
+                <div id="rangeValues" class="mt-2 text-sm text-gray-700"></div>
             </div>
           </div>
           <!-- bloco derivadas -->
@@ -200,7 +189,7 @@
           </div>
         </div>
         <!-- botões de download -->
-        <div class="flex space-x-4 mb-12">
+        <div class="flex space-x-4 mt-8">
           <!-- 1) Botão para Excel -->
           <a
               href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
@@ -469,14 +458,14 @@
 
             // Adiciona botão de reset para ambos os gráficos
             function addResetButtons() {
-                const resetZoom = chart => chart.resetZoom();
+                /* anexar um botão de reset em cada .chart-container */
+                const resetZoom = chart => chart?.resetZoom();
                 document.querySelectorAll('.chart-container').forEach((ctr, idx) => {
                     const btn = document.createElement('button');
                     btn.className = 'reset-zoom';
                     btn.textContent = 'Resetar Zoom';
                     btn.onclick = () => resetZoom(idx === 0 ? temperaturaChart : diferencasChart);
-                    // insere após o container, não dentro
-                    ctr.insertAdjacentElement('afterend', btn);
+                    ctr.appendChild(btn);
                 });
             }
 
