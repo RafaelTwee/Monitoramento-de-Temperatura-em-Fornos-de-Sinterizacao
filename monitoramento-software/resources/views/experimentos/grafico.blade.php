@@ -30,18 +30,18 @@
             position: relative;
         }
 
-        /* chart-container relativo e margens padronizadas */
-        .chart-container {
-            @apply relative mt-6;
-            height: 400px;
-            width: 100%;
+        .reset-zoom {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
 
-        /* reset-zoom concise dentro de chart-container */
-        .reset-zoom {
-            @apply absolute top-2 right-2 bg-blue-500 hover:bg-blue-700
-                    text-white font-bold py-1 px-2 rounded text-xs;
-            opacity: .8;
+        .reset-zoom:hover {
+            opacity: 1;
         }
         
         .chart-wrapper {
@@ -123,30 +123,17 @@
     </style>
 </head>
 <body>
-    <div class="container mx-auto px-6 py-10">
-      <div class="bg-white rounded-2xl shadow-lg p-6 space-y-6">
-        <!-- título + botão Voltar -->
-        <div class="flex justify-between items-center">
-          <h1 class="text-2xl lg:text-3xl font-semibold text-gray-800">
-            <i class="fas fa-chart-line mr-2"></i>Gráfico do Experimento
-          </h1>
-          <a href="{{ route('welcome') }}"
-             class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm">
-            <i class="fas fa-arrow-left mr-2"></i>Voltar
-          </a>
+    <div class="container">
+        <div class="flex justify-between items-center mb-4 mt-8">
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-chart-line mr-2"></i> Gráfico do Experimento
+            </h1>
+            <a href="{{ route('welcome') }}" class="btn-voltar">
+                <i class="fas fa-arrow-left mr-1"></i> Voltar
+            </a>
         </div>
-        <!-- mini-painel de estatísticas -->
-        <div class="flex items-center space-x-4 text-gray-600 border-b border-gray-200 pb-4 mb-6">
-          <div>
-            <i class="fas fa-ruler-combined mr-1"></i>
-            Medições: <span class="font-medium">{{ count($experimento['dados']) }}</span>
-          </div>
-          <div>
-            <i class="far fa-clock mr-1"></i>
-            Duração: <span class="font-medium">{{ $experimento['fim'] ?? 'em andamento' }}</span>
-          </div>
-        </div>
-        <!-- área de edição de nome -->
+
+        {{-- ================= Nome editável ================= --}}
         <div class="flex items-center space-x-2">
             <span id="nomeTexto" class="text-xl font-semibold text-gray-800">
                 {{ $experimento['nome'] }}
@@ -171,103 +158,133 @@
             </button>
             <p id="erroNome" class="text-sm text-red-600 mt-1 hidden"></p>
         </div>
-        <!-- gráficos + slider em grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
-          <!-- bloco temperatura -->
-          <div>
-            <div class="chart-container">
-                <canvas id="temperaturaChart"></canvas>
-                <div id="rangeSlider" class="mt-4"></div>
-                <div id="rangeValues" class="mt-2 text-sm text-gray-700"></div>
-            </div>
-          </div>
-          <!-- bloco derivadas -->
-          <div>
-            <div class="chart-container">
-                <canvas id="diferencasChart"></canvas>
-            </div>
-          </div>
-        </div>
-        <!-- botões de download -->
-        <div class="flex space-x-4 mt-8">
-          <!-- 1) Botão para Excel -->
-          <a
-              href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
-              class="px-4 py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-              📥 Baixar Dados (Excel)
-          </a>
+        {{-- ================================================= --}}
+    </div>
 
-          <!-- 2) Botão para PNGs -->
-          <button
-              id="btnDownloadPNGs"
-              class="px-4 py-2 mb-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          >
-              🖼️ Baixar Gráficos (PNG)
-          </button>
+    {{-- Container para os dois gráficos --}}
+    <div class="container">
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="temperaturaChart"></canvas>
+                    <!-- slider logo abaixo do eixo x -->
+                    <div id="rangeSlider" class="mt-2"></div>
+                    <!-- exibe os valores selecionados -->
+                    <div id="rangeValues" class="text-sm text-gray-700 mt-1"></div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="diferencasChart"></canvas>
+                </div>
+            </div>
         </div>
-        <!-- tabela de dados -->
-        <div class="table-container border border-gray-200 rounded-lg mt-8">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th
-                            scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
-                        >
-                            Tempo Decorrido
-                        </th>
-                        <th
-                            scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
-                        >
-                            Temperatura (°C)
-                        </th>
-                        <!-- Nova coluna de derivada -->
-                        <th
-                            scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
-                        >
-                            Derivada (dT/dt)
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-300">
-                    @php
-                        $prev = null;
-                    @endphp
+    </div>
 
-                    @foreach ($experimento['dados'] as $linha)
+    <div class="container flex space-x-4 mt-10">
+        <!-- 1) Botão para Excel -->
+        <a
+            href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
+            class="px-4 py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >
+            📥 Baixar Dados (Excel)
+        </a>
+
+        <!-- 2) Botão para PNGs -->
+        <button
+            id="btnDownloadPNGs"
+            class="px-4 py-2 mb-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+            🖼️ Baixar Gráficos (PNG)
+        </button>
+    </div>
+
+    <div class="container mb-16">
+        <div class="experimento-card bg-white rounded-xl shadow-md overflow-hidden p-6">
+            <!-- Cabeçalho do Experimento -->
+            <div class="mb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex space-x-4 mt-2 text-sm text-gray-800">
+                            <span>
+                                <i class="far fa-clock mr-1"></i>
+                                <strong>Início:</strong> {{ $experimento['inicio'] }}
+                            </span>
+                            <span>
+                                <i class="far fa-clock mr-1"></i>
+                                <strong>Fim:</strong> {{ $experimento['fim'] ?? 'Não registrado' }}
+                            </span>
+                            <span>
+                                <i class="fas fa-ruler-combined mr-1"></i>
+                                <strong>Medições:</strong> {{ count($experimento['dados']) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Dados -->
+            <div class="table-container border border-gray-200 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Tempo Decorrido
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Temperatura (°C)
+                            </th>
+                            <!-- Nova coluna de derivada -->
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-650 uppercase tracking-wider"
+                            >
+                                Derivada (dT/dt)
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-300">
                         @php
-                            // Se for a primeira linha, derivada = 0
-                            if (is_null($prev)) {
-                                $deriv = 0;
-                            } else {
-                                $deltaT    = $linha['temperatura'] - $prev['temperatura'];
-                                $deltaTime = $linha['tempo']       - $prev['tempo'];
-                                $deriv     = $deltaTime != 0
-                                            ? $deltaT / $deltaTime
-                                            : 0;
-                            }
-                            $prev = $linha;
+                            $prev = null;
                         @endphp
 
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                {{ $linha['tempo'] ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ $linha['temperatura'] ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $deriv < 0 ? 'text-red-600' : 'text-blue-600' }}">
-                                {{ number_format($deriv, 2, ',', '.') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        @foreach ($experimento['dados'] as $linha)
+                            @php
+                                // Se for a primeira linha, derivada = 0
+                                if (is_null($prev)) {
+                                    $deriv = 0;
+                                } else {
+                                    $deltaT    = $linha['temperatura'] - $prev['temperatura'];
+                                    $deltaTime = $linha['tempo']       - $prev['tempo'];
+                                    $deriv     = $deltaTime != 0
+                                                ? $deltaT / $deltaTime
+                                                : 0;
+                                }
+                                $prev = $linha;
+                            @endphp
+
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                    {{ $linha['tempo'] ?? '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $linha['temperatura'] > 30 ? 'text-red-600' : 'text-gray-900' }}">
+                                    {{ $linha['temperatura'] ?? '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $deriv < 0 ? 'text-red-600' : 'text-blue-600' }}">
+                                    {{ number_format($deriv, 2, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
     </div>
 
     {{-- ================= SCRIPT de Chart.js + Zoom ================= --}}
@@ -458,15 +475,25 @@
 
             // Adiciona botão de reset para ambos os gráficos
             function addResetButtons() {
-                /* anexar um botão de reset em cada .chart-container */
-                const resetZoom = chart => chart?.resetZoom();
-                document.querySelectorAll('.chart-container').forEach((ctr, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'reset-zoom';
-                    btn.textContent = 'Resetar Zoom';
-                    btn.onclick = () => resetZoom(idx === 0 ? temperaturaChart : diferencasChart);
-                    ctr.appendChild(btn);
-                });
+                const resetZoom = (chart) => {
+                    if (chart) {
+                        chart.resetZoom();
+                    }
+                };
+
+                const container1 = document.querySelector('#temperaturaChart').closest('.chart-wrapper');
+                const btn1 = document.createElement('button');
+                btn1.className = 'reset-zoom bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs';
+                btn1.textContent = 'Resetar Zoom';
+                btn1.onclick = () => resetZoom(temperaturaChart);
+                container1.appendChild(btn1);
+
+                const container2 = document.querySelector('#diferencasChart').closest('.chart-wrapper');
+                const btn2 = document.createElement('button');
+                btn2.className = 'reset-zoom bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs';
+                btn2.textContent = 'Resetar Zoom';
+                btn2.onclick = () => resetZoom(diferencasChart);
+                container2.appendChild(btn2);
             }
 
             addResetButtons();
