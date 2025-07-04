@@ -140,61 +140,59 @@
                 </button>
             </div>
             <div class="bg-gray-100 rounded-2xl shadow-lg p-6 space-y-4">
-                <div class="flex justify-end p-4">
-                </div>
                <!-- tabela responsiva com zebra + hover -->
                <div class="overflow-x-auto -mx-6 px-6">
-                   <table id="tabelaExperimentos" class="min-w-full divide-y divide-gray-200 table-auto">
+                   <table id="tabelaExperimentos" class="min-w-full divide-y divide-gray-200 table-auto ">
                         <thead class="bg-gray-50">
-                        <tr>
-                            <th>Experimento</th>
-                            <th>Início</th>
-                            <th>Fim</th>
-                            <th>Medições</th>
-                            <th>Temp. Máx (°C)</th>
-                            <th>Temp. Média (°C)</th>
-                            <th class="text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200 odd:bg-white even:bg-gray-50 hover:shadow-sm transition">
-                        @foreach ($experimentos as $experimento)
-                        @php
-                            $temperaturas = array_column($experimento['dados'], 'temperatura');
-                            $temperaturas = array_filter($temperaturas, 'is_numeric');
-                            $maxTemp = count($temperaturas) > 0 ? max($temperaturas) : '-';
-                            $avgTemp = count($temperaturas) > 0 ? number_format(array_sum($temperaturas)/count($temperaturas), 2) : '-';
-                            
-                            // Converter datas para formato ISO para ordenação
-                            $inicioISO = $experimento['inicio'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['inicio']))) : '';
-                            $fimISO = $experimento['fim'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['fim']))) : '';
-                        @endphp
-                        <tr class="hover:bg-indigo-100/50 transition-colors duration-150">
-                            <td>{{ $experimento['nome'] }}</td>
-                            <td data-order="{{ $inicioISO }}">{{ $experimento['inicio'] }}</td>
-                            <td data-order="{{ $fimISO }}">
-                                {{ $experimento['fim'] ?? 'Em andamento' }}
-                            </td>
-                            <td>{{ count($experimento['dados']) }}</td>
-                            <td class="{{ $maxTemp > 30 ? 'text-red-600 font-medium' : 'text-green-600 font-medium' }}">
-                                {{ $maxTemp }}
-                            </td>
-                            <td>{{ $avgTemp }}</td>
-                            <td class="text-right actions space-x-2">
-                                <!-- ícones + tooltip -->
-                                <a href="{{ route('experimentos.grafico', $experimento['id']) }}"
-                                   class="p-2 rounded-full hover:bg-indigo-100" title="Ver Gráfico">
-                                   <i class="fas fa-chart-line text-indigo-600"></i>
-                                </a>
-                                <form action="{{ route('experimentos.destroy', $experimento['id']) }}" method="POST" onsubmit="return confirm('Confirma?');" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="p-2 rounded-full hover:bg-red-100" title="Excluir">
-                                        <i class="fas fa-trash-alt text-red-600"></i>
-                                    </button>
-                                </form>
-                             </td>
-                         </tr>
-                        @endforeach
-                    </tbody>
+                            <tr>
+                                <th>Experimento</th>
+                                <th>Início</th>
+                                <th>Fim</th>
+                                <th>Medições</th>
+                                <th>Temp. Máx (°C)</th>
+                                <th>Temp. Média (°C)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200 odd:bg-white even:bg-gray-50 hover:shadow-sm transition">
+                            @foreach ($experimentos as $experimento)
+                            @php
+                                $temperaturas = array_column($experimento['dados'], 'temperatura');
+                                $temperaturas = array_filter($temperaturas, 'is_numeric');
+                                $maxTemp = count($temperaturas) > 0 ? max($temperaturas) : '-';
+                                $avgTemp = count($temperaturas) > 0 ? number_format(array_sum($temperaturas)/count($temperaturas), 2) : '-';
+                                
+                                // Converter datas para formato ISO para ordenação
+                                $inicioISO = $experimento['inicio'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['inicio']))) : '';
+                                $fimISO = $experimento['fim'] ? date('Y-m-d H:i:s', strtotime(str_replace(['_', '/'], [' ', '-'], $experimento['fim']))) : '';
+                            @endphp
+                            <tr class="hover:bg-indigo-100/50 transition-colors duration-150">
+                                <td>{{ $experimento['nome'] }}</td>
+                                <td data-order="{{ $inicioISO }}">{{ $experimento['inicio'] }}</td>
+                                <td data-order="{{ $fimISO }}">
+                                    {{ $experimento['fim'] ?? 'Em andamento' }}
+                                </td>
+                                <td>{{ count($experimento['dados']) }}</td>
+                                <td class="{{ $maxTemp > 30 ? 'text-red-600 font-medium' : 'text-green-600 font-medium' }}">
+                                    {{ $maxTemp }}
+                                </td>
+                                <td>{{ $avgTemp }}</td>
+                                <td class="text-right actions space-x-2">
+                                    <!-- ícones + tooltip -->
+                                    <a href="{{ route('experimentos.grafico', $experimento['id']) }}"
+                                    class="p-2 rounded-full hover:bg-indigo-100" title="Ver Gráfico">
+                                    <i class="fas fa-chart-line text-indigo-600"></i>
+                                    </a>
+                                    <form action="{{ route('experimentos.destroy', $experimento['id']) }}" method="POST" onsubmit="return confirm('Confirma?');" class="inline">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="p-2 rounded-full hover:bg-red-100" title="Excluir">
+                                            <i class="fas fa-trash-alt text-red-600"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
                    </table>
                </div>
             </div>
