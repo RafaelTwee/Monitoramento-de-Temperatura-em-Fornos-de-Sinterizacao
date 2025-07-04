@@ -100,38 +100,46 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-6 py-10">
-        <!-- cabeçalho + estatísticas rápidas -->
-        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-gray-200 pb-6">
-            <h1 class="text-3xl font-semibold text-gray-800">
-                <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
+<body class="bg-[#4e6e5d]">
+    <!-- cabeçalho + estatísticas rápidas -->
+    <header class="w-full bg-[#4da167] py-4 shadow-lg ">
+        <div class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center">
+            <h1 class="text-3xl font-semibold text-white">
+            <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
-            <div class="flex space-x-4 text-gray-600">
-                <div class="flex items-center"><i class="fas fa-database mr-1"></i>Total: <span class="font-medium ml-1">{{ count($experimentos) }}</span></div>
-                <div class="flex items-center"><i class="fas fa-clock mr-1"></i>Último: <span class="font-medium ml-1"> {{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }} </span></div>
+            <div class="flex space-x-4 text-white">
+            <div class="flex items-center">
+                <i class="fas fa-database mr-1"></i>
+                Total: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-clock mr-1"></i>
+                Último: <span class="font-medium ml-1">{{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }}</span>
+            </div>
             </div>
         </div>
+    </header>
+    <div class="container mx-auto px-6 py-10">
         @include('partials.delete_modal')
         @if (!empty($experimentos))
             <!-- action bar fixa -->
-            <div class="flex flex-wrap gap-2 items-center mb-4">
+            <div class="flex flex-wrap gap-2 items-center mb-4 ">
                 <button
                     id="bulkDeleteBtn"
-                    class="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                    class="flex items-center  px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition shadow-lg"
                     title="Excluir em Massa"
                 >
                     <i class="fas fa-trash-alt mr-2"></i> Excluir em Massa
                 </button>
                 <button
                     id="limparFiltros"
-                    class="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                    class="flex items-center  px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition shadow-lg"
                     title="Limpar filtros"
                 >
                     <i class="fas fa-eraser mr-2"></i> Limpar filtros
                 </button>
             </div>
-            <div class="bg-white rounded-2xl shadow-lg p-6 space-y-4">
+            <div class="bg-gray-100 rounded-2xl shadow-lg p-6 space-y-4">
                 <div class="flex justify-end p-4">
                 </div>
                <!-- tabela responsiva com zebra + hover -->
