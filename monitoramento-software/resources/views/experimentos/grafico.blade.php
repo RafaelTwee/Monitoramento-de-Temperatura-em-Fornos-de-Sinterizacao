@@ -161,7 +161,7 @@
                     <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                        <th class="px-4 py-2 text-center text-xl text-sm font-medium text-gray-700">Tempo</th>
+                        <th class="px-4 py-2 text-center text-xl text-sm font-medium text-gray-700">Tempo (s)</th>
                         <th class="px-4 py-2 text-center text-xl text-sm font-medium text-gray-700">Temperatura (°C)</th>
                         <th class="px-4 py-2 text-center text-xl text-sm font-medium text-gray-700">Derivada (dT/dt)</th>
                         </tr>
@@ -277,7 +277,7 @@
         }]},
         options:{
           ...commonOpts,
-          scales:{x:{type:'linear',title:{display:true,text:'Tempo'}}, y:{title:{display:true,text:'Temp (°C)'}}}
+          scales:{x:{type:'linear',title:{display:true,text:'Tempo (s)'}}, y:{title:{display:true,text:'Temp (°C)'}}}
         }
       });
 
@@ -294,7 +294,7 @@
         }]},
         options:{
           ...commonOpts,
-          scales:{x:{type:'linear',title:{display:true,text:'Tempo'}}, y:{title:{display:true,text:'Taxa (°C/s)'}}}
+          scales:{x:{type:'linear',title:{display:true,text:'Tempo (s)'}}, y:{title:{display:true,text:'Taxa (°C/s)'}}}
         }
       });
 
