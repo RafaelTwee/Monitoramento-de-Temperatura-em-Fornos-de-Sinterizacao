@@ -20,7 +20,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.7.0/nouislider.min.js"></script>
 
     <style>
-        body { background: #4e6e5d; }
+        body { background: #303a51; }
         .chart-container { position: relative; height: 300px; }
         .reset-zoom {
         position: absolute; top: 0.5rem; right: 0.5rem;
@@ -32,7 +32,7 @@
 </head>
 <body class="">
 
-    <header class="w-full bg-[#4da167] py-6 shadow-lg">
+    <header class="w-full bg-[#26557d] py-6 shadow-lg">
         <div class="container mx-auto px-6 flex flex-wrap justify-between items-center">
             <!-- Título -->
             <h1 class="text-3xl font-semibold text-white flex items-center">
@@ -59,7 +59,7 @@
 
             <!-- Botão Voltar -->
             <a href="{{ route('welcome') }}"
-                class="inline-flex items-center px-4 py-2 text-white rounded hover:bg-green-700 transition">
+                class="inline-flex items-center px-4 py-2 text-white rounded hover:bg-[#1f4566] transition">
                 <i class="fas fa-arrow-left mr-2"></i>Voltar
             </a>
             </div>
@@ -92,7 +92,7 @@
                 >
                 <button
                     id="btnSalvarNome"
-                    class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    class="px-3 py-1 bg-[#26557d] text-white rounded hover:bg-[#1f4566]"
                 >Salvar</button>
                 <button
                     id="btnCancelarEdicao"
@@ -106,7 +106,7 @@
             <!-- botão de baixar, fica sempre do lado direito -->
             <button
                 id="btnDownloadPNGs"
-                class="px-4 py-2 bg-[#4DA167] text-white rounded hover:bg-green-700 transition shadow-lg"
+                class="px-4 py-2 bg-[#26557d] text-white rounded hover:bg-[#1f4566] transition shadow-lg"
             >
                 <i class="bi bi-download mr-2"></i>
                 Baixar Gráficos
@@ -151,7 +151,7 @@
                 
                 <a
                 href="{{ route('experimentos.downloadExcel', $experimento['id']) }}"
-                class="px-4 py-2 bg-[#4DA167] text-white rounded hover:bg-green-700 transition mb-4 shadow-lg"
+                class="px-4 py-2 bg-[#26557d] text-white rounded hover:bg-[#1f4566] transition mb-4 shadow-lg"
                 >
                 <i class="bi bi-download px-1"></i>
                 Exportar Dados

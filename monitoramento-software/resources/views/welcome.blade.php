@@ -100,9 +100,9 @@
         }
     </style>
 </head>
-<body class="bg-[#4e6e5d]">
+<body class="bg-[#303a51]">
     <!-- cabeçalho + estatísticas rápidas -->
-    <header class="w-full bg-[#4da167] py-4 shadow-lg ">
+    <header class="w-full bg-[#26557d] py-4 shadow-lg ">
         <div class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center">
             <h1 class="text-3xl font-semibold text-white">
             <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
