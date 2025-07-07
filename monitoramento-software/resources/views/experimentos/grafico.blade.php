@@ -45,7 +45,11 @@
             <div class="flex space-x-4 text-white">
                 <div class="flex items-center">
                 <i class="fas fa-database mr-1"></i>
-                Total: <span class="font-medium ml-1">{{ count($experimento['dados']) }}</span>
+                N° de Medições: <span class="font-medium ml-1">{{ count($experimento['dados']) }}</span>
+                </div>
+                <div class="flex items-center">
+                <i class="fas fa-clock mr-1"></i>
+                Início: <span class="font-medium ml-1">{{ $experimento['inicio'] ?? 'Em andamento' }}</span>
                 </div>
                 <div class="flex items-center">
                 <i class="fas fa-clock mr-1"></i>

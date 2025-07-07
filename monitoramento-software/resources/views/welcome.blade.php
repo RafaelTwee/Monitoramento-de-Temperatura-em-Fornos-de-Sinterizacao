@@ -107,10 +107,10 @@
             <h1 class="text-3xl font-semibold text-white">
             <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
-            <div class="flex space-x-4 text-white">
+            <div class="flex space-x-4 text-white font-medium">
             <div class="flex items-center">
                 <i class="fas fa-database mr-1"></i>
-                Total: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
+                Total de experimentos: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
             </div>
             <div class="flex items-center">
                 <i class="fas fa-clock mr-1"></i>
