@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Exports\ExperimentExport;
 use Maatwebsite\Excel\Facades\Excel;
 
-class GraficoController
+class GraficoController 
 {
     protected $sheetsController;
 

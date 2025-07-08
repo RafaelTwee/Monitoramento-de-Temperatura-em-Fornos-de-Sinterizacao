@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\GoogleSheetService;
 
-class FileController
+class FileController 
 {
     protected $googleSheetService;
 
