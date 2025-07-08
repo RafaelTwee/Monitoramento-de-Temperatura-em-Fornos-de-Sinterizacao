@@ -32,7 +32,7 @@ class SheetsController extends Controller
 
         $service       = new Sheets($client);
         $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
-        $range         = 'Página1!A2:D';
+        $range         = 'Experimentos!A2:D';
         $response      = $service->spreadsheets_values->get($spreadsheetId, $range);
         $values        = $response->getValues();
 
@@ -166,7 +166,7 @@ class SheetsController extends Controller
 
         // Prepara para sobrescrever a coluna D na linha $startRow
         $novoNome = $data['nome'];
-        $range = "Página1!D{$startRow}:D{$startRow}";
+        $range = "Experimentos!D{$startRow}:D{$startRow}";
 
         $valueRange = new Google_Service_Sheets_ValueRange([
             'values' => [
@@ -230,11 +230,11 @@ class SheetsController extends Controller
         $client->addScope(\Google\Service\Sheets::SPREADSHEETS);
         $service = new \Google\Service\Sheets($client);
 
-        // 4) ID da sua planilha e descoberta do sheetId da aba "Página1"
+        // 4) ID da sua planilha e descoberta do sheetId da aba "Experimentos"
         $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
         $meta = $service->spreadsheets->get($spreadsheetId);
         $sheet = collect($meta->getSheets())
-                ->first(fn($s) => $s->getProperties()->getTitle() === 'Página1');
+                ->first(fn($s) => $s->getProperties()->getTitle() === 'Experimentos');
         $sheetId = $sheet->getProperties()->getSheetId();
 
         // 5) Monta e dispara o BatchUpdate para deletar as linhas
@@ -296,10 +296,10 @@ class SheetsController extends Controller
         $service       = new Sheets($client);
         $spreadsheetId = '15N7ceBWKeWTykIkRHa2vnxB7DJViqtA_s5-ydLPfmxs';
 
-        // 4) Descobre o sheetId da aba "Página1"
+        // 4) Descobre o sheetId da aba "Experimentos"
         $meta  = $service->spreadsheets->get($spreadsheetId);
         $sheet = collect($meta->getSheets())
-            ->first(fn($s) => $s->getProperties()->getTitle() === 'Página1');
+            ->first(fn($s) => $s->getProperties()->getTitle() === 'Experimentos');
         $sheetId = $sheet->getProperties()->getSheetId();
 
         // 5) Monta vários deleteDimension (em ordem decrescente de startRow)
