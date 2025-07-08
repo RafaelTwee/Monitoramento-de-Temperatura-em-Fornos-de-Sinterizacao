@@ -8,7 +8,7 @@ use Google\Client;
 use Google\Service\Sheets;
 use Carbon\Carbon;
 
-class SheetsController extends Controller
+class SheetsController
 {
     public function index()
     {
