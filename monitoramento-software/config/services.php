@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'googlesheets' => [
+        'spreadsheet_id' => env('GOOGLE_SPREADSHEET_ID', ''),
+        'credentials_json' => env('GOOGLE_SHEETS_JSON', ''),
+    ],
+
 ];

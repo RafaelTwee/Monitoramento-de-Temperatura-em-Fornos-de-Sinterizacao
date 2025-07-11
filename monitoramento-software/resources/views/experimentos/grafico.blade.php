@@ -59,7 +59,7 @@
             </div>
 
             <!-- Botão Voltar -->
-            <a href="{{ route('welcome') }}"
+            <a href="{{ route('home') }}"
                 class="inline-flex items-center px-4 py-2 text-white rounded hover:bg-[#1f4566] transition">
                 <i class="fas fa-arrow-left mr-2"></i>Voltar
             </a>
