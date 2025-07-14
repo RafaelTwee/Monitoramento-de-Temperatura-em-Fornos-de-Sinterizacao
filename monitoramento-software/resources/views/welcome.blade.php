@@ -145,13 +145,15 @@
         @if (!empty($experimentos))
             <!-- action bar fixa -->
             <div class="flex flex-wrap gap-2 items-center mb-4 ">
-                <button
-                    id="bulkDeleteBtn"
-                    class="flex items-center  px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition shadow-lg"
-                    title="Excluir em Massa"
-                >
-                    <i class="fas fa-trash-alt mr-2"></i> Excluir em Massa
-                </button>
+                @if(Auth::user()->isAdmin())
+                    <button
+                        id="bulkDeleteBtn"
+                        class="flex items-center  px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition shadow-lg"
+                        title="Excluir em Massa"
+                    >
+                        <i class="fas fa-trash-alt mr-2"></i> Excluir em Massa
+                    </button>
+                @endif
                 <button
                     id="limparFiltros"
                     class="flex items-center  px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition shadow-lg"
