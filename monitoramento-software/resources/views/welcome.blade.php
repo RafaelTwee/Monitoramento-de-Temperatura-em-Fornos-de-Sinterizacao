@@ -6,7 +6,6 @@
     <title>Monitoramento de Experimentos</title>
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml" />
-
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -105,27 +104,36 @@
 </head>
 <body class="bg-[#303a51]">
     <!-- cabeçalho + estatísticas rápidas -->
-    <header class="w-full bg-[#26557d] py-4 shadow-lg ">
+    </head>
+<body class="bg-[#303a51]">
+    <!-- cabeçalho + estatísticas rápidas -->
+    <header class="w-full bg-[#26557d] py-4 shadow-lg">
         <div class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center">
             <h1 class="text-3xl font-semibold text-white">
-            <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
+                <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
-            <div class="flex space-x-4 text-white font-medium">
+            <div class="flex space-x-4 text-white font-medium items-center">
                 <div class="flex items-center">
                     <i class="fas fa-database mr-1"></i>
-                    Total de experimentos: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
+                    Total: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
                 </div>
                 <div class="flex items-center">
                     <i class="fas fa-clock mr-1"></i>
-                    Último: <span class="font-medium ml-1">{{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }}</span>
+                    Último: <span class="font-medium ml-1">{{ !empty($experimentos) ? $experimentos[count($experimentos)-1]['inicio'] : '-' }}</span>
                 </div>
-                <a href="{{ route('users.index') }}"
-                    class="px-4 py-2 text-white hover:underline">
-                    Usuários
-                </a>
+
+                {{-- Só exibe para admins --}}
+                @if(Auth::user()->isAdmin())
+                    <a href="{{ route('users.index') }}"
+                       class="px-4 py-2 bg-white text-[#26557d] rounded-lg hover:bg-gray-100 transition">
+                        <i class="fas fa-users mr-1"></i>Usuários
+                    </a>
+                @endif
+
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
-                    <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
                         <i class="fas fa-sign-out-alt mr-1"></i>Logout
                     </button>
                 </form>
@@ -196,12 +204,14 @@
                                     class="p-2 rounded-full hover:bg-indigo-100" title="Ver Gráfico">
                                     <i class="fas fa-chart-line text-indigo-600"></i>
                                     </a>
-                                    <form action="{{ route('experimentos.destroy', $experimento['id']) }}" method="POST" onsubmit="return confirm('Confirma?');" class="inline">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="p-2 rounded-full hover:bg-red-100" title="Excluir">
-                                            <i class="fas fa-trash-alt text-red-600"></i>
-                                        </button>
-                                    </form>
+                                    @if(Auth::user()->isAdmin())
+                                        <form action="{{ route('experimentos.destroy', $experimento['id']) }}" method="POST" onsubmit="return confirm('Confirma?');" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-2 rounded-full hover:bg-red-100" title="Excluir">
+                                                <i class="fas fa-trash-alt text-red-600"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
