@@ -111,14 +111,24 @@
             <i class="fas fa-flask mr-2"></i> Monitoramento de Experimentos
             </h1>
             <div class="flex space-x-4 text-white font-medium">
-            <div class="flex items-center">
-                <i class="fas fa-database mr-1"></i>
-                Total de experimentos: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
-            </div>
-            <div class="flex items-center">
-                <i class="fas fa-clock mr-1"></i>
-                Último: <span class="font-medium ml-1">{{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }}</span>
-            </div>
+                <div class="flex items-center">
+                    <i class="fas fa-database mr-1"></i>
+                    Total de experimentos: <span class="font-medium ml-1">{{ count($experimentos) }}</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-clock mr-1"></i>
+                    Último: <span class="font-medium ml-1">{{ !empty($experimentos) ? $experimentos[count($experimentos) - 1]['inicio'] : '-' }}</span>
+                </div>
+                <a href="{{ route('users.index') }}"
+                    class="px-4 py-2 text-white hover:underline">
+                    Usuários
+                </a>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                    </button>
+                </form>
             </div>
         </div>
     </header>

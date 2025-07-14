@@ -42,27 +42,33 @@
 
             <!-- Estatísticas e botão Voltar juntos -->
             <div class="flex items-center space-x-6">
-            <!-- Estatísticas -->
-            <div class="flex space-x-4 text-white">
-                <div class="flex items-center">
-                <i class="fas fa-database mr-1"></i>
-                N° de Medições: <span class="font-medium ml-1">{{ count($experimento['dados']) }}</span>
-                </div>
-                <div class="flex items-center">
-                <i class="fas fa-clock mr-1"></i>
-                Início: <span class="font-medium ml-1">{{ $experimento['inicio'] ?? 'Em andamento' }}</span>
-                </div>
-                <div class="flex items-center">
-                <i class="fas fa-clock mr-1"></i>
-                Fim: <span class="font-medium ml-1">{{ $experimento['fim'] ?? 'Em andamento' }}</span>
-                </div>
-            </div>
+              <!-- Estatísticas -->
+              <div class="flex space-x-4 text-white">
+                  <div class="flex items-center">
+                  <i class="fas fa-database mr-1"></i>
+                  N° de Medições: <span class="font-medium ml-1">{{ count($experimento['dados']) }}</span>
+                  </div>
+                  <div class="flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  Início: <span class="font-medium ml-1">{{ $experimento['inicio'] ?? 'Em andamento' }}</span>
+                  </div>
+                  <div class="flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  Fim: <span class="font-medium ml-1">{{ $experimento['fim'] ?? 'Em andamento' }}</span>
+                  </div>
+              </div>
 
-            <!-- Botão Voltar -->
-            <a href="{{ route('home') }}"
-                class="inline-flex items-center px-4 py-2 text-white rounded hover:bg-[#1f4566] transition">
-                <i class="fas fa-arrow-left mr-2"></i>Voltar
-            </a>
+              <!-- Botão Voltar -->
+              <a href="{{ route('home') }}"
+                  class="inline-flex items-center px-4 py-2 text-white rounded hover:bg-[#1f4566] transition">
+                  <i class="fas fa-arrow-left mr-2"></i>Voltar
+              </a>
+              <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                </button>
+              </form>
             </div>
         </div>
     </header>

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Google_Client;
 use Google_Service_Sheets;
+use Google_Service_Sheets_ValueRange as ValueRange;
+
 
 class GoogleSheetService
 {
@@ -33,4 +35,15 @@ class GoogleSheetService
         $response = $this->sheetsService->spreadsheets_values->get($fileId, $range);
         return $response->getValues();  
     }
+
+    public function updateSheetValues(string $fileId, string $range, array $values)
+    {
+        $body = new ValueRange(['values' => $values]);
+        return $this->sheetsService
+                    ->spreadsheets_values
+                    ->update($fileId, $range, $body, [
+                        'valueInputOption' => 'USER_ENTERED'
+                    ]);
+    }
+
 }

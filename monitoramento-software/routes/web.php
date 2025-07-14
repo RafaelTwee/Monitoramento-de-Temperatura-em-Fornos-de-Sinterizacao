@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\SheetsController;
 use App\Http\Controllers\GraficoController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,4 +63,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/experimentos', 'index')->name('experimentos.index');
         Route::get('/experimentos/{id}', 'show')->name('experimentos.grafico');
     });
+
+
+    // Rota de usuários
+    Route::get('/users', [UserController::class, 'index'])
+     ->name('users.index');
+
+     // Formulário de edição
+    Route::get('/users/{name}/edit', [UserController::class, 'edit'])
+        ->name('users.edit');
+
+    // Atualização propriamente dita
+    Route::put('/users/{name}', [UserController::class, 'update'])
+        ->name('users.update');
+
+    Route::delete('/users/{name}', [UserController::class, 'destroy'])
+     ->name('users.destroy');
+
+    // Exibir formulário de criação
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users',       [UserController::class, 'store'])->name('users.store');
+
+
 });
