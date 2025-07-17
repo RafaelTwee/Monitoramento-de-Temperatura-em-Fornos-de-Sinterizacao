@@ -205,7 +205,7 @@ class SheetsController
         $toDelete = collect($experimentos)->first(fn($exp) => $exp['id'] === $id);
 
         if (! $toDelete) {
-            return redirect()->route('welcome')
+            return redirect()->route('home')
                             ->with('error', 'Experimento não encontrado.');
         }
 
@@ -254,7 +254,7 @@ class SheetsController
         ]);
         $service->spreadsheets->batchUpdate($spreadsheetId, $batchRequest);
 
-        return redirect()->route('welcome')
+        return redirect()->route('home')
                         ->with('success', 'Linhas do experimento excluídas com sucesso.');
     }
 
@@ -281,7 +281,7 @@ class SheetsController
         }
 
         if (empty($toDelete)) {
-            return redirect()->route('welcome')
+            return redirect()->route('home')
                              ->with('error', 'Nenhum experimento encontrado neste período.');
         }
 
@@ -324,7 +324,7 @@ class SheetsController
         ]);
         $service->spreadsheets->batchUpdate($spreadsheetId, $batch);
 
-        return redirect()->route('welcome')->with('success', 'Experimentos excluídos com sucesso.');
+        return redirect()->route('home')->with('success', 'Experimentos excluídos com sucesso.');
     }
 
 
