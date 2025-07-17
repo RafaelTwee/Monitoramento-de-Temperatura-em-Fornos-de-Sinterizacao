@@ -27,10 +27,16 @@
             </div>
 
             <div>
-                <label for="password" class="block text-gray-700 font-medium mb-1">Senha <span class="text-sm text-gray-500">(deixe em branco para manter a atual)</span></label>
-                <input id="password" name="password" type="password"
-                    value="{{ old('password', $password) }}"    {{-- usa a senha atual --}}
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <label for="password" class="block text-gray-700 font-medium mb-1">
+                    Senha <span class="text-sm text-gray-500">(deixe em branco para manter a atual)</span>
+                </label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value="{{ old('password') }}"              {{-- fica só old('password') --}}
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror

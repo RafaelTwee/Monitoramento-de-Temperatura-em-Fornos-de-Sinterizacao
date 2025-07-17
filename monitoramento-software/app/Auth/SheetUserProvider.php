@@ -74,12 +74,13 @@ class SheetUserProvider implements UserProvider
 
     public function validateCredentials(Authenticatable $user, array $credentials): bool
     {
-        // se suas senhas estiverem em texto puro:
-        return ($credentials['password'] ?? '') === $user->getAuthPassword();
-
-        // ou, se quiser usar hash:
-        // return $this->hasher->check($credentials['password'], $user->getAuthPassword());
-    }
+        // $this->hasher é uma instância de Illuminate\Hashing\BcryptHasher
+        return $this->hasher->check(
+            $credentials['password'], 
+            $user->getAuthPassword()
+        );
+    }// return $this->hasher->check($credentials['password'], $user->getAuthPassword());
+    
 
     public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false): bool
     {
