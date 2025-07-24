@@ -234,6 +234,10 @@
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdn.datatables.net/plug-ins/1.11.5/sorting/datetime-moment.js"></script>
+    <script
+        defer
+        src="/_vercel/speed-insights/script.js"
+    ></script>    
 
     <script>
         $(document).ready(function() {

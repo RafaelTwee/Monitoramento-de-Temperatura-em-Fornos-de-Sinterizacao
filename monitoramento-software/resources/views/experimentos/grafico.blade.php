@@ -32,6 +32,10 @@
     </style>
 </head>
 <body class="">
+  <script
+    defer
+    src="/_vercel/speed-insights/script.js"
+  ></script>
 
     <header class="w-full bg-[#26557d] py-6 shadow-lg">
         <div class="container mx-auto px-6 flex flex-wrap justify-between items-center">
