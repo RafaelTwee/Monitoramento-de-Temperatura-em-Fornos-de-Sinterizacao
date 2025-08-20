@@ -58,6 +58,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/planilha', 'index')->name('planilha.index');
     });
 
+    Route::post('/experimentos/importar-csv', [SheetsController::class, 'importarCsv'])->name('experimentos.importarCsv');
+
+
     // Rotas de gráficos
     Route::controller(GraficoController::class)->group(function () {
         Route::get('/experimentos', 'index')->name('experimentos.index');
